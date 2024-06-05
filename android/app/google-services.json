@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "104318353121",
+    "project_id": "auctussfa",
+    "storage_bucket": "auctussfa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104318353121:android:2949536fc4c931a2b141a0",
+        "android_client_info": {
+          "package_name": "com.example.auctus_call"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAy63SV3WfBu31XcRWD1IpeDI8wo1BqCNw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
