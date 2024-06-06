@@ -4,6 +4,7 @@ import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/cart_screen.dart';
 import 'package:auctus_call/views/salesman/main_catalog_screen.dart';
 import 'package:auctus_call/views/salesman/rejected_screen.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -38,6 +39,7 @@ class _FormCallState extends State<FormCall> {
   TextEditingController addressController = TextEditingController();
   TextEditingController picNameController = TextEditingController();
   TextEditingController picContactController = TextEditingController();
+  TextEditingController searchStoreController = TextEditingController();
 
   PlanType? selectedPlan;
   CallResult? selectedCall;
@@ -224,18 +226,108 @@ class _FormCallState extends State<FormCall> {
                 ),
               ),
               const SizedBox(height: 10),
-              DropdownSearch<StoreObject>(
-                items: listStore,
-                itemAsString: (StoreObject? u) => u?.storeName ?? '',
-                onChanged: (value) {
-                  setState(() {
-                    selectedStore = value;
-                    print(selectedStore!.storeId);
-                    fetchStoreDetails(value!.storeName);
-                    print(value.storeName.runtimeType);
-                  });
+              DropdownButtonFormField2<StoreObject>(
+                isExpanded: false,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                dropdownSearchData: DropdownSearchData(
+                  searchController: searchStoreController,
+                  searchInnerWidgetHeight: 50,
+                  searchInnerWidget: Container(
+                    height: 50,
+                    padding: const EdgeInsets.only(
+                      top: 8,
+                      bottom: 4,
+                      right: 8,
+                      left: 8,
+                    ),
+                    child: TextFormField(
+                      expands: true,
+                      maxLines: null,
+                      controller: searchStoreController,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        hintText: 'Cari nama customer',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  searchMatchFn: (item, searchValue) {
+                    return (item.value?.storeName ?? "")
+                        .toLowerCase()
+                        .toString()
+                        .contains(searchValue.toLowerCase());
+                  },
+                ),
+                // inputDecoration(context,
+                //     contentPadding:
+                //         EdgeInsets.symmetric(vertical: 1.8.h, horizontal: 0)),
+                hint: Text(
+                  "Pilih tipe customer",
+                  style: TextStyle(color: Colors.grey.shade500),
+                ),
+                // style: primaryTextStyle1(),
+                value: selectedStore,
+                items: listStore
+                    .map(
+                      (e) => DropdownMenuItem<StoreObject>(
+                        value: e,
+                        child: Text(
+                          e.storeName,
+                          // style: primaryTextStyle1(),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                validator: (value) {
+                  if (value == null) {
+                    return 'Silihkan pilih salah satu toko';
+                  }
+                  return null;
                 },
+                onChanged: (value) {
+                  // controller.tipeCustomerSelect.value = value;
+                  // controller.resetOption(value ?? "");
+                },
+                buttonStyleData: const ButtonStyleData(
+                  padding: EdgeInsets.only(right: 10),
+                ),
+                iconStyleData: const IconStyleData(
+                  icon: Icon(
+                    Icons.keyboard_arrow_down_outlined,
+                    color: Colors.black45,
+                  ),
+                  iconSize: 16,
+                ),
+                dropdownStyleData: DropdownStyleData(
+                  maxHeight: MediaQuery.of(context).size.height * 0.4,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                menuItemStyleData: const MenuItemStyleData(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                ),
               ),
+              // DropdownSearch<StoreObject>(
+
+              //   filterFn: (listStore, string) {
+              //     listStore.storeName;
+              //   },
+              //   items: listStore,
+              //   itemAsString: (StoreObject? u) => u?.storeName ?? '',
+              //   onChanged: (value) {
+              //     setState(() {
+              //       selectedStore = value;
+              //       print(selectedStore!.storeId);
+              //       fetchStoreDetails(value!.storeName);
+              //       print(value.storeName.runtimeType);
+              //     });
+              //   },
+              // ),
               const SizedBox(height: 20),
               const Text(
                 'Select Type',
