@@ -4,6 +4,7 @@ import 'package:auctus_call/views/salesman/form_call.dart';
 import 'package:auctus_call/views/salesman/form_noo.dart';
 import 'package:auctus_call/views/salesman/home_screen.dart';
 import 'package:auctus_call/views/salesman/main_catalog_screen.dart';
+import 'package:auctus_call/views/salesman/product_list.dart';
 import 'package:auctus_call/views/salesman/profile_screen.dart';
 import 'package:auctus_call/views/salesman/rejected_screen.dart';
 import 'package:auctus_call/views/salesman/scraping_form.dart';
@@ -29,9 +30,9 @@ class _MainScreenState extends State<MainScreen> {
         documentID: widget.ID,
         callID: widget.ID,
       ),
-      RejectedScreen(storeID: widget.ID, callID: widget.ID),
-      ProfileScreen(documentID: widget.ID),
+      ProductList(userID: widget.ID),
       ScrapingForm(documentID: ''), // Add the ScrapingForm screen here
+      ProfileScreen(documentID: widget.ID),
       FormCall(
         documentID: widget.ID,
         callID: widget.ID,
@@ -52,11 +53,9 @@ class _MainScreenState extends State<MainScreen> {
         items: const [
           BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Product'),
           BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.circle_bottomthird_split),
-              label: 'Activities'),
-          BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.cart), label: 'Cart'),
+              icon: Icon(Icons.store), label: 'Store Profile'),
           BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.person), label: 'Profile')
         ],

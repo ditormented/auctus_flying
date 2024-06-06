@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 
 enum PlanType { online, offline }
 
@@ -53,25 +54,8 @@ class _FormCallState extends State<FormCall> {
   StoreObject? selectedStore;
   String? selectedStoreID;
 
-  // static Future<String> uploadImage(XFile imageFile) async {
-  //   String fileName = basename(imageFile.name);
-  //   FirebaseStorage storage = FirebaseStorage.instance;
-  //   Reference ref = storage.ref().child(fileName);
-  //   UploadTask task = ref.putFile(File(imageFile.path));
-  //   TaskSnapshot snapshot = await task;
-
-  //   return snapshot.ref.getDownloadURL();
-  // }
-
   static Future<String> uploadImage(XFile imageFile) async {
-    // Ensure Firebase is properly configured (refer to platform-specific setup guides)
-    // https://firebase.google.com/docs/flutter/setup (Android)
-    // https://firebase.google.com/docs/ios/setup (iOS)
-
     String fileName = basename(imageFile.name);
-
-    // Explicitly specify the storage bucket if needed:
-    // If using a default bucket, you can remove this line.
     final storage =
         FirebaseStorage.instanceFor(bucket: 'gs://auctussfa.appspot.com');
     Reference ref = storage.ref().child(fileName);
@@ -240,35 +224,17 @@ class _FormCallState extends State<FormCall> {
                 ),
               ),
               const SizedBox(height: 10),
-              DropdownButtonFormField<StoreObject>(
-                items: listStore.map((storeName) {
-                  return DropdownMenuItem<StoreObject>(
-                    value: storeName,
-                    child: Text(storeName.storeName),
-                  );
-                }).toList(),
+              DropdownSearch<StoreObject>(
+                items: listStore,
+                itemAsString: (StoreObject? u) => u?.storeName ?? '',
                 onChanged: (value) {
                   setState(() {
                     selectedStore = value;
                     print(selectedStore!.storeId);
-                    fetchStoreDetails(value!
-                        .storeName); // Fetch store details when a store is selected
+                    fetchStoreDetails(value!.storeName);
                     print(value.storeName.runtimeType);
                   });
                 },
-                value: selectedStore,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Stores',
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 8.0,
-                    horizontal: 12.0,
-                  ),
-                ),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black,
-                ),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -586,7 +552,6 @@ class _FormCallState extends State<FormCall> {
         await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
-      print('sayasudah disini');
       setState(() {
         _image = XFile(pickedFile.path);
       });
