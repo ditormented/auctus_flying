@@ -4,6 +4,7 @@ import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/cart_screen.dart';
 import 'package:auctus_call/views/salesman/main_catalog_screen.dart';
 import 'package:auctus_call/views/salesman/rejected_screen.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -38,6 +39,7 @@ class _FormCallState extends State<FormCall> {
   TextEditingController addressController = TextEditingController();
   TextEditingController picNameController = TextEditingController();
   TextEditingController picContactController = TextEditingController();
+  TextEditingController searchStoreController = TextEditingController();
 
   PlanType? selectedPlan;
   CallResult? selectedCall;
@@ -89,13 +91,12 @@ class _FormCallState extends State<FormCall> {
     });
   }
 
-  void fetchStoreDetails(String storeName) async {
-    QuerySnapshot storeDocs =
-        await stores.where('storeName', isEqualTo: storeName).get();
-    if (storeDocs.docs.isNotEmpty) {
-      var storeData = storeDocs.docs.first.data() as Map<String, dynamic>;
+  void fetchStoreDetails(String storeID) async {
+    DocumentSnapshot storeDoc = await stores.doc(storeID).get();
+    if (storeDoc.exists) {
+      var storeData = storeDoc.data() as Map<String, dynamic>;
       setState(() {
-        selectedStoreID = storeDocs.docs.first.id;
+        selectedStoreID = storeDoc.id;
         addressController.text = storeData['address'] ?? '';
         picNameController.text = storeData['picName'] ?? '';
         picContactController.text = storeData['contactToko'] ?? '';
@@ -224,17 +225,88 @@ class _FormCallState extends State<FormCall> {
                 ),
               ),
               const SizedBox(height: 10),
-              DropdownSearch<StoreObject>(
-                items: listStore,
-                itemAsString: (StoreObject? u) => u?.storeName ?? '',
+              DropdownButtonFormField2<StoreObject>(
+                isExpanded: false,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                dropdownSearchData: DropdownSearchData(
+                  searchController: searchStoreController,
+                  searchInnerWidgetHeight: 50,
+                  searchInnerWidget: Container(
+                    height: 50,
+                    padding: const EdgeInsets.only(
+                      top: 8,
+                      bottom: 4,
+                      right: 8,
+                      left: 8,
+                    ),
+                    child: TextFormField(
+                      expands: true,
+                      maxLines: null,
+                      controller: searchStoreController,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        hintText: 'Cari nama customer',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  searchMatchFn: (item, searchValue) {
+                    return (item.value?.storeName ?? "")
+                        .toLowerCase()
+                        .toString()
+                        .contains(searchValue.toLowerCase());
+                  },
+                ),
+                hint: Text(
+                  "Pilih tipe customer",
+                  style: TextStyle(color: Colors.grey.shade500),
+                ),
+                value: selectedStore,
+                items: listStore
+                    .map(
+                      (e) => DropdownMenuItem<StoreObject>(
+                        value: e,
+                        child: Text(
+                          e.storeName,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                validator: (value) {
+                  if (value == null) {
+                    return 'Silihkan pilih salah satu toko';
+                  }
+                  return null;
+                },
                 onChanged: (value) {
                   setState(() {
                     selectedStore = value;
-                    print(selectedStore!.storeId);
-                    fetchStoreDetails(value!.storeName);
-                    print(value.storeName.runtimeType);
+                    fetchStoreDetails(selectedStore!.storeId);
                   });
                 },
+                buttonStyleData: const ButtonStyleData(
+                  padding: EdgeInsets.only(right: 10),
+                ),
+                iconStyleData: const IconStyleData(
+                  icon: Icon(
+                    Icons.keyboard_arrow_down_outlined,
+                    color: Colors.black45,
+                  ),
+                  iconSize: 16,
+                ),
+                dropdownStyleData: DropdownStyleData(
+                  maxHeight: MediaQuery.of(context).size.height * 0.4,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                menuItemStyleData: const MenuItemStyleData(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                ),
               ),
               const SizedBox(height: 20),
               const Text(
