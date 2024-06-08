@@ -8,6 +8,7 @@ import 'package:auctus_call/views/salesman/product_list.dart';
 import 'package:auctus_call/views/salesman/profile_screen.dart';
 import 'package:auctus_call/views/salesman/rejected_screen.dart';
 import 'package:auctus_call/views/salesman/scraping_form.dart';
+import 'package:auctus_call/views/salesman/store_profile/store_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class _MainScreenState extends State<MainScreen> {
         documentID: widget.ID,
       ),
       ProductList(userID: widget.ID),
-      ScrapingForm(documentID: ''), // Add the ScrapingForm screen here
+      StoreList(userID: widget.ID),
       ProfileScreen(documentID: widget.ID),
       FormCall(
         documentID: widget.ID,

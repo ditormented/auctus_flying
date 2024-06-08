@@ -390,9 +390,9 @@ class _FormCallState extends State<FormCall> {
                   ElevatedButton(
                     style: ButtonStyle(
                       backgroundColor:
-                          MaterialStateProperty.all<Color>(mainColor),
+                          WidgetStateProperty.all<Color>(mainColor),
                       foregroundColor:
-                          MaterialStateProperty.all<Color>(Colors.white),
+                          WidgetStateProperty.all<Color>(Colors.white),
                     ),
                     onPressed: () async {
                       XFile file = await getImage();
@@ -420,7 +420,7 @@ class _FormCallState extends State<FormCall> {
                     )
                   : SizedBox(),
               const SizedBox(height: 20),
-              Divider(
+              const Divider(
                 height: 10,
                 thickness: 4,
                 color: mainColor,
