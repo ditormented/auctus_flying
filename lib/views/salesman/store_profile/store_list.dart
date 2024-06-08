@@ -1,7 +1,6 @@
-import 'dart:developer';
 import 'package:auctus_call/utilities/colors.dart';
-import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/store_visit_history.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
+import 'package:auctus_call/views/salesman/store_profile/store_profile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -110,6 +109,15 @@ class _StoreListState extends State<StoreList> {
                   ? data!['storeName'] ?? ''
                   : '',
               visitDate: visitDate ?? DateTime.now(),
+              latitude: data?.containsKey('latitude') == true
+                  ? data!['latitude']
+                  : '',
+              longitude: data?.containsKey('longitude') == true
+                  ? data!['longitude']
+                  : '',
+              storeImageUrl: data?.containsKey('storeImageUrl') == true
+                  ? data!['fotoToko']
+                  : '',
             );
           },
         ).toList();
@@ -257,7 +265,7 @@ class _StoreListState extends State<StoreList> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => StoreVisitHistory(
+                                        builder: (context) => StoreProfile(
                                           storeObject: store,
                                           userID: widget.userID,
                                         ),
@@ -293,7 +301,6 @@ class _StoreListState extends State<StoreList> {
                                   child: const Icon(
                                     Icons.first_page,
                                     color: Colors.white,
-                                    size: 40,
                                   ),
                                 ),
                               ),
@@ -309,22 +316,18 @@ class _StoreListState extends State<StoreList> {
                                   child: const Icon(
                                     Icons.chevron_left,
                                     color: Colors.white,
-                                    size: 40,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Text("$currentPage",
                                   style: const TextStyle(
-                                      fontSize: 18,
                                       fontWeight: FontWeight.bold)),
                               const Text(" / ",
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold)),
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               Text("$totalPages",
                                   style: const TextStyle(
-                                      fontSize: 18,
                                       fontWeight: FontWeight.bold)),
                               const SizedBox(width: 8),
                               // Next Page Button
@@ -338,7 +341,6 @@ class _StoreListState extends State<StoreList> {
                                   child: const Icon(
                                     Icons.chevron_right,
                                     color: Colors.white,
-                                    size: 40,
                                   ),
                                 ),
                               ),
@@ -354,7 +356,6 @@ class _StoreListState extends State<StoreList> {
                                   child: const Icon(
                                     Icons.last_page,
                                     color: Colors.white,
-                                    size: 40,
                                   ),
                                 ),
                               ),

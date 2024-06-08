@@ -1,15 +1,500 @@
+import 'dart:async';
+import 'dart:developer';
+
+import 'package:auctus_call/utilities/colors.dart';
+import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/purchase_document_object.dart';
+import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/store_visit_history.dart';
+import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/store_order_history.dart';
+import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class StoreProfile extends StatefulWidget {
-  const StoreProfile({super.key});
+  final StoreObject storeObject;
+  final String userID;
+  const StoreProfile(
+      {super.key, required this.storeObject, required this.userID});
 
   @override
-  State<StoreProfile> createState() => _StoreProfileState();
+  // ignore: library_private_types_in_public_api
+  _StoreProfileState createState() => _StoreProfileState();
 }
 
 class _StoreProfileState extends State<StoreProfile> {
+  final ImagePicker _picker = ImagePicker();
+  XFile? imagePhotoTokoX;
+  String latitudeObs = "";
+  String longitudeObs = "";
+  String reverseGeolocation = "";
+
+  Future getPhotoToko() async {
+    late Position position;
+    position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best);
+    try {
+      XFile? file = await _picker.pickImage(
+          source: ImageSource.camera,
+          maxHeight: 1000,
+          maxWidth: 1000,
+          imageQuality: 75,
+          preferredCameraDevice: CameraDevice.rear);
+
+      if (file != null) {
+        imagePhotoTokoX = file;
+        latitudeObs = position.latitude.toString();
+        longitudeObs = position.longitude.toString();
+        log(
+          "latitude: $latitudeObs, longitude: $longitudeObs",
+        );
+      }
+    } catch (e) {
+      imagePhotoTokoX = null;
+    }
+  }
+
+  List<PurchaseDocumentObject> listPurchase = [];
+
+  Future collectAllCall() async {
+    log('widget.storeObject.storeId ${widget.storeObject.storeId}');
+    List<String> listCallID = [];
+    List<PurchaseDocumentObject> listPurchase = [];
+
+    try {
+      QuerySnapshot callsSnapshot = await FirebaseFirestore.instance
+          .collection('calls')
+          .where('storeID', isEqualTo: widget.storeObject.storeId)
+          .where('callResult', isEqualTo: "purchase")
+          .get();
+
+      log('callsSnapshot.docs.length: ${callsSnapshot.docs.length}'); // Log jumlah dokumen yang ditemukan
+
+      for (var doc in callsSnapshot.docs) {
+        listCallID.add(doc.id);
+        try {
+          QuerySnapshot purchaseSnapshot = await FirebaseFirestore.instance
+              .collection('purchases')
+              .where('callID', isEqualTo: doc.id)
+              .get();
+
+          if (purchaseSnapshot.docs.isNotEmpty) {
+            var purchaseDoc = purchaseSnapshot.docs[0];
+            log("purchaseSnapshot.id => ${purchaseDoc.id}");
+
+            try {
+              List<Map<String, dynamic>> items =
+                  List<Map<String, dynamic>>.from(purchaseDoc["items"]);
+              listPurchase.add(
+                PurchaseDocumentObject(
+                  callID: purchaseDoc["callID"] ?? '',
+                  items: items,
+                  timestamp: (purchaseDoc["timestamp"] as Timestamp).toDate(),
+                  total: purchaseDoc["total"] ?? 0.0,
+                  userID: purchaseDoc["userID"] ?? '',
+                ),
+              );
+            } catch (e) {
+              log("listPurchase.add error => $e");
+            }
+          } else {
+            log("No purchase document found for callID: ${doc.id}");
+          }
+        } catch (e) {
+          log("Error getting purchase document with ID ${doc.id} => $e");
+        }
+      }
+    } catch (e) {
+      log("Error getting calls documents => $e");
+    }
+
+    log('listCallID -> ${listCallID.length}');
+    log('listPurchase -> $listPurchase');
+    calculateTotalPurchases(listPurchase);
+  }
+
+  int totalPurchases = 0;
+  Future calculateTotalPurchases(
+      List<PurchaseDocumentObject> listPurchase) async {
+    int totalPembelian = 0;
+    for (var element in listPurchase) {
+      log("for listPurchase => ${element.total}");
+      totalPembelian += element.total
+          .round(); // Menambahkan total dari setiap elemen ke totalPembelian
+    }
+
+    setState(() {
+      totalPurchases =
+          totalPembelian; // Mengupdate totalPurchases dengan nilai totalPembelian
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    collectAllCall();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        foregroundColor: Colors.white,
+        title:
+            const Text('Store Detail', style: TextStyle(color: Colors.white)),
+        backgroundColor: mainColor,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.blue,
+                    child: Icon(Icons.store, size: 30, color: Colors.white),
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.storeObject.storeName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: const Text(
+                          'online store',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'Tanggal Bergabung : ${DateFormat('d MMM yyyy').format(widget.storeObject.visitDate!)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'No.Telp : ${widget.storeObject.contactToko}',
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Card(
+                color: mainColor,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      const Row(
+                        children: [
+                          Text(
+                            "Riwayat Transaksi",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Total Transaksi',
+                              style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'Rp. $totalPurchases',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Menu History",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _historyButton(EnumSelectHistory.visitHistory),
+                          _historyButton(EnumSelectHistory.orderHistory),
+                          _historyButton(EnumSelectHistory.storeLeague),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                color: mainColor,
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      const Row(
+                        children: [
+                          Text(
+                            "Validasi Lokasi",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      widget.storeObject.storeImageUrl.isNotEmpty
+                          ? Image.network(
+                              widget.storeObject.storeImageUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: 200,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                Icons.error,
+                                size: 100,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.image,
+                              size: 100,
+                              color: Colors.white,
+                            ),
+                      const SizedBox(height: 32),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          getPhotoToko();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.gps_fixed_rounded,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          // 'GPS Coordinate',
+                          'Update data GPS',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      widget.storeObject.storeImageUrl.isNotEmpty
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _latLongContainer('Latitude', '8771256688'),
+                                _latLongContainer('Longitude', '0987621256'),
+                              ],
+                            )
+                          : Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              child: const Text(
+                                "Latitude / longitude tidak ditemukan!",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Reverse Geotagging (Alamat GPS)',
+                              style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              reverseGeolocation,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 16,
+                            ),
+                            const Text(
+                              'Alamat input by Salesman',
+                              style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              widget.storeObject.address,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
+
+  Widget _historyButton(EnumSelectHistory selectHistory) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  selectHistory == EnumSelectHistory.visitHistory
+                      ? StoreVisitHistory(
+                          storeObject: widget.storeObject,
+                          userID: widget.userID)
+                      : selectHistory == EnumSelectHistory.orderHistory
+                          ? const StoreOrderHistory()
+                          : const StoreOrderHistory(),
+            ),
+          );
+          if (selectHistory == EnumSelectHistory.visitHistory) {
+          } else if (selectHistory == EnumSelectHistory.orderHistory) {}
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8.0),
+            border: Border.all(color: Colors.blue),
+          ),
+          child: Text(
+            selectHistory.name == EnumSelectHistory.visitHistory.name
+                ? 'VH'
+                : selectHistory.name == EnumSelectHistory.orderHistory.name
+                    ? 'OH'
+                    : 'SL',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.blue,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _latLongContainer(String title, String value) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4.0),
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(color: Colors.blue),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.blue,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.blue,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum EnumSelectHistory {
+  visitHistory,
+  orderHistory,
+  storeLeague,
 }
