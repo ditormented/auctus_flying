@@ -9,12 +9,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
   final String documentID;
-  final String callID;
 
   const HomeScreen({
     super.key,
     required this.documentID,
-    required this.callID,
   });
 
   @override
@@ -28,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _callCount = 0;
   int _ecTotal = 0;
   int _rejectTotal = 0;
+  DateTime _selectedDate = DateTime.now();
 
   void getUserData() async {
     try {
@@ -41,27 +40,33 @@ class _HomeScreenState extends State<HomeScreen> {
           _userName = userDoc['name'];
           _userEmail = userDoc['email'];
         });
-        getStoreCount();
-        getCallTotal();
-        getECtotal();
-        getRejectTotal();
+        fetchCounts();
       }
     } catch (e) {
       print('Error fetching user data: $e');
     }
   }
 
+  void fetchCounts() {
+    getStoreCount();
+    getCallTotal();
+    getECtotal();
+    getRejectTotal();
+  }
+
   void getStoreCount() async {
     try {
-      DateTime startOfDay = DateTime(
-          DateTime.now().year, DateTime.now().month, DateTime.now().day);
-      DateTime endOfDay = DateTime(DateTime.now().year, DateTime.now().month,
-          DateTime.now().day, 23, 59, 59);
+      DateTime startOfDay =
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      DateTime endOfDay = DateTime(_selectedDate.year, _selectedDate.month,
+          _selectedDate.day, 23, 59, 59);
+
       QuerySnapshot storeSnapshot = await FirebaseFirestore.instance
           .collection('stores')
           .where('email', isEqualTo: _userEmail)
-          // .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-          // .where('timestamp', isLessThanOrEqualTo: endOfDay)
+          // .where('timestamp',
+          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -74,19 +79,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void getCallTotal() async {
     try {
-      DateTime startOfDay = DateTime(
-          DateTime.now().year, DateTime.now().month, DateTime.now().day);
-      DateTime endOfDay = DateTime(DateTime.now().year, DateTime.now().month,
-          DateTime.now().day, 23, 59, 59);
-      QuerySnapshot storeSnapshot = await FirebaseFirestore.instance
+      DateTime startOfDay =
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      DateTime endOfDay = DateTime(_selectedDate.year, _selectedDate.month,
+          _selectedDate.day, 23, 59, 59);
+
+      QuerySnapshot callSnapshot = await FirebaseFirestore.instance
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
-          // .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-          // .where('timestamp', isLessThanOrEqualTo: endOfDay)
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
-        _callCount = storeSnapshot.docs.length;
+        _callCount = callSnapshot.docs.length;
       });
     } catch (e) {
       print('Error fetching call count: $e');
@@ -95,20 +102,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void getECtotal() async {
     try {
-      DateTime startOfDay = DateTime(
-          DateTime.now().year, DateTime.now().month, DateTime.now().day);
-      DateTime endOfDay = DateTime(DateTime.now().year, DateTime.now().month,
-          DateTime.now().day, 23, 59, 59);
-      QuerySnapshot storeSnapshot = await FirebaseFirestore.instance
+      DateTime startOfDay =
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      DateTime endOfDay = DateTime(_selectedDate.year, _selectedDate.month,
+          _selectedDate.day, 23, 59, 59);
+
+      QuerySnapshot ecSnapshot = await FirebaseFirestore.instance
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
           .where('callResult', isEqualTo: 'purchase')
-          // .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-          // .where('timestamp', isLessThanOrEqualTo: endOfDay)
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
-        _ecTotal = storeSnapshot.docs.length;
+        _ecTotal = ecSnapshot.docs.length;
       });
     } catch (e) {
       print('Error fetching EC count: $e');
@@ -117,23 +126,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void getRejectTotal() async {
     try {
-      DateTime startOfDay = DateTime(
-          DateTime.now().year, DateTime.now().month, DateTime.now().day);
-      DateTime endOfDay = DateTime(DateTime.now().year, DateTime.now().month,
-          DateTime.now().day, 23, 59, 59);
-      QuerySnapshot storeSnapshot = await FirebaseFirestore.instance
+      DateTime startOfDay =
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      DateTime endOfDay = DateTime(_selectedDate.year, _selectedDate.month,
+          _selectedDate.day, 23, 59, 59);
+
+      QuerySnapshot rejectSnapshot = await FirebaseFirestore.instance
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
           .where('callResult', isEqualTo: 'reject')
-          // .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-          // .where('timestamp', isLessThanOrEqualTo: endOfDay)
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
-        _rejectTotal = storeSnapshot.docs.length;
+        _rejectTotal = rejectSnapshot.docs.length;
       });
     } catch (e) {
-      print('Error fetching EC count: $e');
+      print('Error fetching reject count: $e');
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+      fetchCounts();
     }
   }
 
@@ -141,6 +167,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     getUserData();
+    getCallTotal();
+    getStoreCount();
+    getRejectTotal();
   }
 
   @override
@@ -201,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 backgroundColor: mainColor,
                                 minimumSize: Size(double.infinity, 50),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
                               child: Text(
@@ -218,7 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   MaterialPageRoute(
                                     builder: (context) => FormCall(
                                       documentID: widget.documentID,
-                                      callID: widget.callID,
                                     ),
                                   ),
                                 );
@@ -227,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 backgroundColor: mainColor,
                                 minimumSize: Size(double.infinity, 50),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
                               child: Text(
@@ -249,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 backgroundColor: mainColor,
                                 minimumSize: Size(double.infinity, 50),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
                               child: Text(
@@ -265,6 +293,32 @@ class _HomeScreenState extends State<HomeScreen> {
                                 fontWeight: FontWeight.bold,
                                 color: mainColor,
                               ),
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Selected Date: ${DateFormat.yMMMMd().format(_selectedDate)}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: mainColor,
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    _selectDate(context);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: Icon(Icons.calendar_today,
+                                      color: Colors.white),
+                                ),
+                              ],
                             ),
                             SizedBox(height: 8),
                             GridView.count(

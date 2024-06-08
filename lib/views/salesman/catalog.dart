@@ -9,8 +9,10 @@ import 'package:staggered_grid_view_flutter/widgets/staggered_tile.dart';
 class Catalog extends StatefulWidget {
   final String category;
   final String userID;
-  final String callID;
-  Catalog({required this.category, required this.userID, required this.callID});
+  Catalog({
+    required this.category,
+    required this.userID,
+  });
 
   @override
   _CatalogState createState() => _CatalogState();
@@ -56,7 +58,6 @@ class _CatalogState extends State<Catalog> {
                 builder: (context) => CartScreen(
                       cartItems: cartItems,
                       userID: widget.userID,
-                      callID: widget.callID,
                     )),
           );
         },

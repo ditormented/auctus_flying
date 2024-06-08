@@ -18,12 +18,10 @@ enum CallResult { purchase, reject }
 
 class FormCall extends StatefulWidget {
   final String documentID;
-  final String callID;
 
   const FormCall({
     super.key,
     required this.documentID,
-    required this.callID,
   });
 
   @override
@@ -91,13 +89,12 @@ class _FormCallState extends State<FormCall> {
     });
   }
 
-  void fetchStoreDetails(String storeName) async {
-    QuerySnapshot storeDocs =
-        await stores.where('storeName', isEqualTo: storeName).get();
-    if (storeDocs.docs.isNotEmpty) {
-      var storeData = storeDocs.docs.first.data() as Map<String, dynamic>;
+  void fetchStoreDetails(String storeID) async {
+    DocumentSnapshot storeDoc = await stores.doc(storeID).get();
+    if (storeDoc.exists) {
+      var storeData = storeDoc.data() as Map<String, dynamic>;
       setState(() {
-        selectedStoreID = storeDocs.docs.first.id;
+        selectedStoreID = storeDoc.id;
         addressController.text = storeData['address'] ?? '';
         picNameController.text = storeData['picName'] ?? '';
         picContactController.text = storeData['contactToko'] ?? '';
@@ -111,11 +108,12 @@ class _FormCallState extends State<FormCall> {
     }
   }
 
+  Map<String, dynamic> callVariable = {};
   void saveCallDataAndNavigate(
       BuildContext context, CallResult callResult) async {
     String imageURL = await uploadImage(XFile(imagePath));
-    String callID = '';
-    await calls.add({
+    // String callID = '';
+    callVariable = {
       'email': emailController.text,
       'name': nameController.text,
       'storeName': selectedStore!.storeName,
@@ -130,38 +128,58 @@ class _FormCallState extends State<FormCall> {
       'callResult': callResult.toString().split('.').last,
       'timestamp': Timestamp.now(),
       'status': 'Called',
-    }).then((value) {
-      callID = value.id;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Call data saved successfully'),
-          backgroundColor: mainColor,
-        ),
+    };
+    // await calls.add({
+    //   'email': emailController.text,
+    //   'name': nameController.text,
+    //   'storeName': selectedStore!.storeName,
+    //   'storeID': selectedStore!.storeId,
+    //   'address': addressController.text,
+    //   'picName': picNameController.text,
+    //   'picContact': picContactController.text,
+    //   'province': selectedProvince?.name,
+    //   'kabupaten': selectedKabupaten?.name,
+    //   'imageURL': imageURL,
+    //   'planType': selectedPlan?.toString().split('.').last,
+    //   'callResult': callResult.toString().split('.').last,
+    //   'timestamp': Timestamp.now(),
+    //   'status': 'Called',
+    // }).then((value) {
+    // }).catchError((error) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text('Failed to save call data: $error')),
+    //   );
+    // });
+
+    // callID = value.id;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Call data saved successfully'),
+        backgroundColor: mainColor,
+      ),
+    );
+    if (callResult == CallResult.purchase) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MainCatalog(
+                  userID: widget.documentID,
+                  imageURL: imageURL,
+                  callVariable: callVariable,
+                  // callID: callID,
+                )),
       );
-      if (callResult == CallResult.purchase) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => MainCatalog(
-                    userID: widget.documentID,
-                    callID: callID,
-                  )),
-        );
-      } else if (callResult == CallResult.reject) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => RejectedScreen(
-                    storeID: selectedStore!.storeId,
-                    callID: callID,
-                  )),
-        );
-      }
-    }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save call data: $error')),
+    } else if (callResult == CallResult.reject) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => RejectedScreen(
+                  storeID: selectedStore!.storeId,
+                  callVariable: callVariable,
+                  // callID: callID,
+                )),
       );
-    });
+    }
   }
 
   @override
@@ -262,14 +280,10 @@ class _FormCallState extends State<FormCall> {
                         .contains(searchValue.toLowerCase());
                   },
                 ),
-                // inputDecoration(context,
-                //     contentPadding:
-                //         EdgeInsets.symmetric(vertical: 1.8.h, horizontal: 0)),
                 hint: Text(
                   "Pilih tipe customer",
                   style: TextStyle(color: Colors.grey.shade500),
                 ),
-                // style: primaryTextStyle1(),
                 value: selectedStore,
                 items: listStore
                     .map(
@@ -277,7 +291,6 @@ class _FormCallState extends State<FormCall> {
                         value: e,
                         child: Text(
                           e.storeName,
-                          // style: primaryTextStyle1(),
                         ),
                       ),
                     )
@@ -289,8 +302,10 @@ class _FormCallState extends State<FormCall> {
                   return null;
                 },
                 onChanged: (value) {
-                  // controller.tipeCustomerSelect.value = value;
-                  // controller.resetOption(value ?? "");
+                  setState(() {
+                    selectedStore = value;
+                    fetchStoreDetails(selectedStore!.storeId);
+                  });
                 },
                 buttonStyleData: const ButtonStyleData(
                   padding: EdgeInsets.only(right: 10),
@@ -312,22 +327,6 @@ class _FormCallState extends State<FormCall> {
                   padding: EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),
-              // DropdownSearch<StoreObject>(
-
-              //   filterFn: (listStore, string) {
-              //     listStore.storeName;
-              //   },
-              //   items: listStore,
-              //   itemAsString: (StoreObject? u) => u?.storeName ?? '',
-              //   onChanged: (value) {
-              //     setState(() {
-              //       selectedStore = value;
-              //       print(selectedStore!.storeId);
-              //       fetchStoreDetails(value!.storeName);
-              //       print(value.storeName.runtimeType);
-              //     });
-              //   },
-              // ),
               const SizedBox(height: 20),
               const Text(
                 'Select Type',
