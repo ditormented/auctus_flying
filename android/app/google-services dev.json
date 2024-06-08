@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "738273846116",
+    "project_id": "cekcek-41bd2",
+    "storage_bucket": "cekcek-41bd2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:738273846116:android:676b82a3cbdee3d5459071",
+        "android_client_info": {
+          "package_name": "com.example.auctus_call"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBS9MRPmvDOvbdNbWBL3qSqtlOs8jdrGew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

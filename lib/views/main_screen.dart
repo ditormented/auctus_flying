@@ -29,14 +29,12 @@ class _MainScreenState extends State<MainScreen> {
     final List<Widget> _pages = [
       HomeScreen(
         documentID: widget.ID,
-        callID: widget.ID,
       ),
       ProductList(userID: widget.ID),
       StoreList(userID: widget.ID),
       ProfileScreen(documentID: widget.ID),
       FormCall(
         documentID: widget.ID,
-        callID: widget.ID,
       ), // Add the FormCall screen here
     ];
 

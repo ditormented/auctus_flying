@@ -2,47 +2,30 @@ import 'package:auctus_call/utilities/colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:auctus_call/views/salesman/home_screen.dart';
 
 class RejectedScreen extends StatefulWidget {
   final String storeID;
-  final String callID;
+  final Map<String, dynamic> callVariable;
 
   const RejectedScreen(
-      {super.key, required this.storeID, required this.callID});
+      {super.key, required this.storeID, required this.callVariable});
+
   @override
   _RejectedScreenState createState() => _RejectedScreenState();
 }
 
 class _RejectedScreenState extends State<RejectedScreen> {
   final TextEditingController _reasonController = TextEditingController();
-  final TextEditingController _ourPriceController = TextEditingController();
-  final TextEditingController _competitorPriceController =
-      TextEditingController();
-  CollectionReference category =
-      FirebaseFirestore.instance.collection('products');
+  CollectionReference reason = FirebaseFirestore.instance.collection('reason');
   final List<TextEditingController> _productControllers = [];
   final List<TextEditingController> _productOurPriceControllers = [];
   final List<TextEditingController> _productCompetitorPriceControllers = [];
-  TextEditingController productController = TextEditingController();
-  TextEditingController competitorPriceController = TextEditingController();
-  TextEditingController ourPriceController = TextEditingController();
-  CollectionReference reason = FirebaseFirestore.instance.collection('reason');
 
   int _wordCount = 0;
   bool _isValid = false;
   String? _selectedReason;
-  String? _selectedCategory;
   final List<String> _reasons = ['Price War', 'Other'];
-  final List<String> _categories = [
-    'Nivea Sun',
-    'Nivea Men',
-    'Nivea Deodorant',
-    'Nivea Deodorant Men',
-    'Nivea Body',
-    'NCRM Cremes',
-    'Nivea Face Care',
-    'NLC Lip Care',
-  ];
 
   double _calculateDifference(double ourPrice, double competitorPrice) {
     if (competitorPrice == 0) return 0;
@@ -55,19 +38,60 @@ class _RejectedScreenState extends State<RejectedScreen> {
     _reasonController.addListener(_updateWordCount);
   }
 
+  CollectionReference calls = FirebaseFirestore.instance.collection('calls');
   Future<void> submitForm() async {
-    var body = {
-      'storeID': widget.storeID,
-      'callID': widget.callID,
-      'reasonReject': _reasonController.text,
-      'selectReason': _selectedReason,
-      'itemCategory': _selectedCategory,
-      'product': productController.text,
-      'ourPrice': ourPriceController.text,
-      'competitorPrice': competitorPriceController.text,
-    };
+    var productsComparison = [];
+    for (int i = 0; i < _productControllers.length; i++) {
+      productsComparison.add({
+        'product': _productControllers[i].text,
+        'ourPrice': _productOurPriceControllers[i].text,
+        'competitorPrice': _productCompetitorPriceControllers[i].text,
+      });
+    }
+
+    var body = {};
+    await calls.add(widget.callVariable).then((value) {
+      body = {
+        'storeID': widget.storeID,
+        'callID': value.id,
+        'reasonReject': _reasonController.text,
+        'selectReason': _selectedReason,
+        'productsComparison': productsComparison,
+      };
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save call data: $error')),
+      );
+    });
+    // var
     print('$body');
-    await reason.add(body);
+    try {
+      await reason.add(body);
+      // Display success notification
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Form submitted successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      // Navigate to HomeScreen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(
+            documentID: widget.storeID, // Adjust if needed
+          ),
+        ),
+      );
+    } catch (e) {
+      // Display error notification
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit form. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _updateWordCount() {
@@ -80,8 +104,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
   @override
   void dispose() {
     _reasonController.dispose();
-    _ourPriceController.dispose();
-    _competitorPriceController.dispose();
     for (var controller in _productControllers) {
       controller.dispose();
     }
@@ -102,11 +124,19 @@ class _RejectedScreenState extends State<RejectedScreen> {
     });
   }
 
+  void _removeProductComparison(int index) {
+    setState(() {
+      _productControllers[index].dispose();
+      _productOurPriceControllers[index].dispose();
+      _productCompetitorPriceControllers[index].dispose();
+      _productControllers.removeAt(index);
+      _productOurPriceControllers.removeAt(index);
+      _productCompetitorPriceControllers.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -157,88 +187,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
               ),
               SizedBox(height: 16),
               if (_selectedReason == 'Price War') ...[
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: _selectedCategory,
-                  items: _categories
-                      .map((category) => DropdownMenuItem(
-                            child: Text(category),
-                            value: category,
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCategory = value;
-                      _productControllers
-                          .clear(); // Clear all product controllers
-                      _productOurPriceControllers
-                          .clear(); // Clear all our price controllers
-                      _productCompetitorPriceControllers
-                          .clear(); // Clear all competitor price controllers
-                      _ourPriceController
-                          .clear(); // Clear our price for category
-                      _competitorPriceController
-                          .clear(); // Clear competitor price for category
-                    });
-                  },
-                ),
-                // SizedBox(height: 16),
-                // if (_selectedCategory != null)
-                //   Column(
-                //     crossAxisAlignment: CrossAxisAlignment.start,
-                //     children: [
-                //       Row(
-                //         children: [
-                //           Expanded(
-                //             child: TextField(
-                //               controller: _ourPriceController,
-                //               decoration: InputDecoration(
-                //                 labelText: 'Our Price',
-                //                 border: OutlineInputBorder(),
-                //               ),
-                //               keyboardType: TextInputType.numberWithOptions(
-                //                   decimal: true),
-                //               inputFormatters: [
-                //                 FilteringTextInputFormatter.allow(
-                //                     RegExp(r'^\d+\.?\d{0,2}')),
-                //               ],
-                //             ),
-                //           ),
-                //           SizedBox(width: 16),
-                //           Expanded(
-                //             child: TextField(
-                //               controller: _competitorPriceController,
-                //               decoration: InputDecoration(
-                //                 labelText: 'Competitor Price',
-                //                 border: OutlineInputBorder(),
-                //               ),
-                //               keyboardType: TextInputType.numberWithOptions(
-                //                   decimal: true),
-                //               inputFormatters: [
-                //                 FilteringTextInputFormatter.allow(
-                //                     RegExp(r'^\d+\.?\d{0,2}')),
-                //               ],
-                //             ),
-                //           ),
-                //         ],
-                //       ),
-                //       SizedBox(height: 16),
-                //       Text(
-                //         'Category Price Difference: ${_calculateDifference(
-                //           double.tryParse(_ourPriceController.text) ?? 0,
-                //           double.tryParse(_competitorPriceController.text) ?? 0,
-                //         ).toStringAsFixed(2)}%',
-                //         style: TextStyle(
-                //           fontSize: 16,
-                //           fontWeight: FontWeight.bold,
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: _addProductComparison,
                   icon: Icon(Icons.add),
@@ -250,60 +198,82 @@ class _RejectedScreenState extends State<RejectedScreen> {
                 SizedBox(height: 16),
                 ..._productControllers.asMap().entries.map((entry) {
                   int index = entry.key;
-                  productController = entry.value;
-                  ourPriceController = _productOurPriceControllers[index];
-                  competitorPriceController =
+                  TextEditingController productController = entry.value;
+                  TextEditingController ourPriceController =
+                      _productOurPriceControllers[index];
+                  TextEditingController competitorPriceController =
                       _productCompetitorPriceControllers[index];
 
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('products')
-                              .where('Category', isEqualTo: _selectedCategory)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return CircularProgressIndicator();
-                            }
-                            var products = snapshot.data!.docs
-                                .map((doc) => doc['Name'] as String)
-                                .toList();
-                            return DropdownButtonFormField<String>(
-                              decoration: InputDecoration(
-                                labelText: 'Product',
-                                labelStyle: TextStyle(
-                                    fontSize: 14), // Smaller label text
-                                border: OutlineInputBorder(),
-                              ),
-                              value: productController.text.isNotEmpty
-                                  ? productController.text
-                                  : null,
-                              items: products
-                                  .map((product) => DropdownMenuItem(
-                                        child: Text(product,
-                                            style: TextStyle(
-                                                fontSize:
-                                                    14)), // Smaller dropdown text
-                                        value: product,
-                                      ))
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  productController.text = value!;
-                                });
-                              },
-                            );
-                          },
-                        ),
-                        SizedBox(height: 16),
                         Row(
                           children: [
                             Expanded(
-                              child: TextField(
+                              child: StreamBuilder<QuerySnapshot>(
+                                stream: FirebaseFirestore.instance
+                                    .collection('products')
+                                    .snapshots(), // Get all products
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return CircularProgressIndicator();
+                                  }
+                                  var products = snapshot.data!.docs
+                                      .map((doc) => doc['Name'] as String)
+                                      .toList();
+                                  return Autocomplete<String>(
+                                    optionsBuilder:
+                                        (TextEditingValue textEditingValue) {
+                                      if (textEditingValue.text.isEmpty) {
+                                        return const Iterable<String>.empty();
+                                      }
+                                      return products.where((String option) {
+                                        return option.toLowerCase().contains(
+                                            textEditingValue.text
+                                                .toLowerCase());
+                                      });
+                                    },
+                                    onSelected: (String selection) {
+                                      setState(() {
+                                        productController.text = selection;
+                                      });
+                                    },
+                                    fieldViewBuilder: (context, controller,
+                                        focusNode, onEditingComplete) {
+                                      return TextField(
+                                        controller: controller,
+                                        focusNode: focusNode,
+                                        decoration: InputDecoration(
+                                          labelText: 'Product',
+                                          labelStyle: TextStyle(
+                                              fontSize:
+                                                  14), // Smaller label text
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _removeProductComparison(index),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('products')
+                              .where('Name', isEqualTo: productController.text)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return TextField(
                                 controller: ourPriceController,
                                 decoration: InputDecoration(
                                   labelText: 'Our Price',
@@ -319,9 +289,41 @@ class _RejectedScreenState extends State<RejectedScreen> {
                                   FilteringTextInputFormatter.allow(
                                       RegExp(r'^\d+\.?\d{0,2}')),
                                 ],
+                              );
+                            }
+                            var products = snapshot.data!.docs;
+                            String productPrice = '0';
+                            if (products.isNotEmpty) {
+                              var productData =
+                                  products.first.data() as Map<String, dynamic>;
+                              if (productData.containsKey('ppnPrice')) {
+                                productPrice =
+                                    productData['ppnPrice'].toString();
+                              }
+                            }
+                            return TextField(
+                              controller: ourPriceController
+                                ..text = productPrice,
+                              decoration: InputDecoration(
+                                labelText: 'Our Price',
+                                labelStyle: TextStyle(
+                                    fontSize: 14), // Smaller label text
+                                border: OutlineInputBorder(),
                               ),
-                            ),
-                            SizedBox(width: 16),
+                              style:
+                                  TextStyle(fontSize: 14), // Smaller input text
+                              keyboardType: TextInputType.numberWithOptions(
+                                  decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d+\.?\d{0,2}')),
+                              ],
+                            );
+                          },
+                        ),
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
                             Expanded(
                               child: TextField(
                                 controller: competitorPriceController,
@@ -355,7 +357,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 16),
                       ],
                     ),
                   );
@@ -364,11 +365,7 @@ class _RejectedScreenState extends State<RejectedScreen> {
               SizedBox(height: 24),
               Center(
                 child: ElevatedButton(
-                  onPressed: _isValid
-                      ? () {
-                          submitForm();
-                        }
-                      : null,
+                  onPressed: _isValid ? submitForm : null,
                   child: Text('Submit'),
                 ),
               ),
