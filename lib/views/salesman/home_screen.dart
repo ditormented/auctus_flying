@@ -9,12 +9,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
   final String documentID;
-  final String callID;
 
   const HomeScreen({
     super.key,
     required this.documentID,
-    required this.callID,
   });
 
   @override
@@ -249,7 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   MaterialPageRoute(
                                     builder: (context) => FormCall(
                                       documentID: widget.documentID,
-                                      callID: widget.callID,
                                     ),
                                   ),
                                 );

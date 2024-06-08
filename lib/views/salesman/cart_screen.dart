@@ -7,12 +7,14 @@ import 'package:intl/intl.dart';
 class CartScreen extends StatefulWidget {
   final List<Map<String, dynamic>> cartItems;
   final String userID;
-  final String callID;
+  final Map<String, dynamic>? callVariable;
+  final String? imageURL;
 
   CartScreen({
     required this.cartItems,
+    this.imageURL,
     required this.userID,
-    required this.callID,
+    this.callVariable,
   });
 
   @override
@@ -38,7 +40,7 @@ class _CartScreenState extends State<CartScreen> {
     try {
       DocumentSnapshot storeDoc = await FirebaseFirestore.instance
           .collection('stores')
-          .doc(widget.callID)
+          .doc(widget.userID)
           .get();
       if (storeDoc.exists) {
         setState(() {
@@ -78,16 +80,25 @@ class _CartScreenState extends State<CartScreen> {
     return total;
   }
 
+  CollectionReference calls = FirebaseFirestore.instance.collection('calls');
+
   Future<void> _savePurchase() async {
     try {
-      await FirebaseFirestore.instance.collection('purchases').add({
-        'callID': widget.callID,
-        'items': widget.cartItems,
-        'total': _calculateTotal(),
-        'timestamp': FieldValue.serverTimestamp(),
-        'userID': widget.userID,
-        'caption': reasonController.text, // Menambahkan caption
+      await calls.add(widget.callVariable).then((value) async {
+        await FirebaseFirestore.instance.collection('purchases').add({
+          'callID': value.id,
+          'items': widget.cartItems,
+          'total': _calculateTotal(),
+          'timestamp': FieldValue.serverTimestamp(),
+          'userID': widget.userID,
+          'caption': reasonController.text, // Menambahkan caption
+        });
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save call data: $error')),
+        );
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Purchase saved successfully')),
       );

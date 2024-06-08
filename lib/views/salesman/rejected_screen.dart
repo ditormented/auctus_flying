@@ -6,10 +6,10 @@ import 'package:auctus_call/views/salesman/home_screen.dart';
 
 class RejectedScreen extends StatefulWidget {
   final String storeID;
-  final String callID;
+  final Map<String, dynamic> callVariable;
 
   const RejectedScreen(
-      {super.key, required this.storeID, required this.callID});
+      {super.key, required this.storeID, required this.callVariable});
 
   @override
   _RejectedScreenState createState() => _RejectedScreenState();
@@ -38,6 +38,7 @@ class _RejectedScreenState extends State<RejectedScreen> {
     _reasonController.addListener(_updateWordCount);
   }
 
+  CollectionReference calls = FirebaseFirestore.instance.collection('calls');
   Future<void> submitForm() async {
     var productsComparison = [];
     for (int i = 0; i < _productControllers.length; i++) {
@@ -48,13 +49,21 @@ class _RejectedScreenState extends State<RejectedScreen> {
       });
     }
 
-    var body = {
-      'storeID': widget.storeID,
-      'callID': widget.callID,
-      'reasonReject': _reasonController.text,
-      'selectReason': _selectedReason,
-      'productsComparison': productsComparison,
-    };
+    var body = {};
+    await calls.add(widget.callVariable).then((value) {
+      body = {
+        'storeID': widget.storeID,
+        'callID': value.id,
+        'reasonReject': _reasonController.text,
+        'selectReason': _selectedReason,
+        'productsComparison': productsComparison,
+      };
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save call data: $error')),
+      );
+    });
+    // var
     print('$body');
     try {
       await reason.add(body);
@@ -71,7 +80,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
         MaterialPageRoute(
           builder: (context) => HomeScreen(
             documentID: widget.storeID, // Adjust if needed
-            callID: widget.callID, // Adjust if needed
           ),
         ),
       );

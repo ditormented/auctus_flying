@@ -18,12 +18,10 @@ enum CallResult { purchase, reject }
 
 class FormCall extends StatefulWidget {
   final String documentID;
-  final String callID;
 
   const FormCall({
     super.key,
     required this.documentID,
-    required this.callID,
   });
 
   @override
@@ -110,11 +108,12 @@ class _FormCallState extends State<FormCall> {
     }
   }
 
+  Map<String, dynamic> callVariable = {};
   void saveCallDataAndNavigate(
       BuildContext context, CallResult callResult) async {
     String imageURL = await uploadImage(XFile(imagePath));
-    String callID = '';
-    await calls.add({
+    // String callID = '';
+    callVariable = {
       'email': emailController.text,
       'name': nameController.text,
       'storeName': selectedStore!.storeName,
@@ -129,38 +128,58 @@ class _FormCallState extends State<FormCall> {
       'callResult': callResult.toString().split('.').last,
       'timestamp': Timestamp.now(),
       'status': 'Called',
-    }).then((value) {
-      callID = value.id;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Call data saved successfully'),
-          backgroundColor: mainColor,
-        ),
+    };
+    // await calls.add({
+    //   'email': emailController.text,
+    //   'name': nameController.text,
+    //   'storeName': selectedStore!.storeName,
+    //   'storeID': selectedStore!.storeId,
+    //   'address': addressController.text,
+    //   'picName': picNameController.text,
+    //   'picContact': picContactController.text,
+    //   'province': selectedProvince?.name,
+    //   'kabupaten': selectedKabupaten?.name,
+    //   'imageURL': imageURL,
+    //   'planType': selectedPlan?.toString().split('.').last,
+    //   'callResult': callResult.toString().split('.').last,
+    //   'timestamp': Timestamp.now(),
+    //   'status': 'Called',
+    // }).then((value) {
+    // }).catchError((error) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text('Failed to save call data: $error')),
+    //   );
+    // });
+
+    // callID = value.id;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Call data saved successfully'),
+        backgroundColor: mainColor,
+      ),
+    );
+    if (callResult == CallResult.purchase) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MainCatalog(
+                  userID: widget.documentID,
+                  imageURL: imageURL,
+                  callVariable: callVariable,
+                  // callID: callID,
+                )),
       );
-      if (callResult == CallResult.purchase) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => MainCatalog(
-                    userID: widget.documentID,
-                    callID: callID,
-                  )),
-        );
-      } else if (callResult == CallResult.reject) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => RejectedScreen(
-                    storeID: selectedStore!.storeId,
-                    callID: callID,
-                  )),
-        );
-      }
-    }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save call data: $error')),
+    } else if (callResult == CallResult.reject) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => RejectedScreen(
+                  storeID: selectedStore!.storeId,
+                  callVariable: callVariable,
+                  // callID: callID,
+                )),
       );
-    });
+    }
   }
 
   @override

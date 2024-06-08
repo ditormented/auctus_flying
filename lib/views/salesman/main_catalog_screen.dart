@@ -2,15 +2,18 @@ import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/cart_screen.dart'; // Mengimpor CartScreen
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 
 class MainCatalog extends StatefulWidget {
   final String userID;
-  final String callID;
+  final String imageURL;
+  final Map<String, dynamic> callVariable;
 
   const MainCatalog({
     super.key,
     required this.userID,
-    required this.callID,
+    required this.imageURL,
+    required this.callVariable,
   });
 
   @override
@@ -137,8 +140,9 @@ class _MainCatalogState extends State<MainCatalog> {
       MaterialPageRoute(
         builder: (context) => CartScreen(
           cartItems: cartItems,
+          callVariable: widget.callVariable,
           userID: widget.userID,
-          callID: widget.callID,
+          imageURL: widget.imageURL,
         ),
       ),
     );
