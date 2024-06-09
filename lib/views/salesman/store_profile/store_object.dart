@@ -12,8 +12,8 @@ class StoreObject {
   String status;
   String storeName;
   DateTime? visitDate;
-  String latitude;
-  String longitude;
+  double latitude;
+  double longitude;
   String storeImageUrl;
   StoreObject({
     required this.storeId,

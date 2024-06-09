@@ -111,12 +111,12 @@ class _StoreListState extends State<StoreList> {
               visitDate: visitDate ?? DateTime.now(),
               latitude: data?.containsKey('latitude') == true
                   ? data!['latitude']
-                  : '',
+                  : 0.0,
               longitude: data?.containsKey('longitude') == true
                   ? data!['longitude']
-                  : '',
+                  : 0.0,
               storeImageUrl: data?.containsKey('storeImageUrl') == true
-                  ? data!['fotoToko']
+                  ? data!['storeImageUrl']
                   : '',
             );
           },
@@ -206,6 +206,22 @@ class _StoreListState extends State<StoreList> {
               contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
             ),
             style: const TextStyle(color: mainColor),
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(32),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 24, bottom: 8),
+                child: Text(
+                  'Total Stores(${filteredStore.length})',
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -360,25 +376,6 @@ class _StoreListState extends State<StoreList> {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                      Card(
-                        color: const Color.fromARGB(255, 38, 77, 141),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 4, horizontal: 16),
-                          child: Text(
-                            'Total Stores\n(${filteredStore.length})',
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                            textAlign: TextAlign.left,
                           ),
                         ),
                       ),

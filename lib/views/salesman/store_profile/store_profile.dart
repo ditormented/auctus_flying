@@ -8,6 +8,7 @@ import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/s
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -46,13 +47,74 @@ class _StoreProfileState extends State<StoreProfile> {
         imagePhotoTokoX = file;
         latitudeObs = position.latitude.toString();
         longitudeObs = position.longitude.toString();
-        log(
-          "latitude: $latitudeObs, longitude: $longitudeObs",
-        );
+        log("latitude: $latitudeObs, longitude: $longitudeObs");
+
+        // Get reverse geotagging
+        try {
+          List<Placemark>? placemarks = await placemarkFromCoordinates(
+              position.latitude, position.longitude);
+          if (placemarks == null || placemarks.isEmpty) {
+            log("Placemarks list is null or empty.");
+          } else {
+            log("Placemarks: $placemarks");
+
+            Placemark placemark = placemarks.first;
+
+            String street = placemark.street ?? "";
+            log("street: $street");
+            String subLocality = placemark.subLocality ?? "";
+            log("subLocality: $subLocality");
+            String locality = placemark.locality ?? "";
+            log("locality: $locality");
+            String administrativeArea = placemark.administrativeArea ?? "";
+            log("administrativeArea: $administrativeArea");
+            String country = placemark.country ?? "";
+            log("country: $country");
+
+            reverseGeolocation =
+                "$street, $subLocality, $locality, $administrativeArea, $country";
+            log("Reverse geolocation: $reverseGeolocation");
+          }
+        } catch (e) {
+          log("Error fetching reverse geotagging: $e");
+        }
+
+        // Upload the image to a cloud storage service and get the URL
+        String storeImageUrl = await uploadImage(file);
+        log("Uploaded image URL: $storeImageUrl");
+
+        // Update Firestore
+        await updateStoreData(storeImageUrl, position.latitude,
+            position.longitude, reverseGeolocation);
+        log("Store data updated in Firestore.");
       }
     } catch (e) {
       imagePhotoTokoX = null;
+      log("Error in getPhotoToko: $e");
     }
+  }
+
+  Future<String> uploadImage(XFile file) async {
+    // Add your cloud storage upload logic here
+    // For example, using Firebase Storage:
+    // final storageRef = FirebaseStorage.instance.ref().child('store_images/${widget.storeObject.storeId}.jpg');
+    // await storageRef.putFile(File(file.path));
+    // return await storageRef.getDownloadURL();
+    return 'https://example.com/your_uploaded_image.jpg';
+  }
+
+  Future updateStoreData(String storeImageUrl, double latitude,
+      double longitude, String reverseGeolocation) async {
+    DocumentReference storeRef = FirebaseFirestore.instance
+        .collection('stores')
+        .doc(widget.storeObject.storeId);
+
+    await storeRef.update({
+      'storeImageUrl': storeImageUrl,
+      'latitude': latitude,
+      'longitude': longitude,
+      'reverseGeotagging': reverseGeolocation,
+    });
   }
 
   List<PurchaseDocumentObject> listPurchase = [];
@@ -147,65 +209,74 @@ class _StoreProfileState extends State<StoreProfile> {
         backgroundColor: mainColor,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.blue,
-                    child: Icon(Icons.store, size: 30, color: Colors.white),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.storeObject.storeName,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 30,
+                          backgroundColor: Colors.blue,
+                          child:
+                              Icon(Icons.store, size: 30, color: Colors.white),
                         ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.storeObject.storeName,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              child: const Text(
+                                'online store',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tanggal Bergabung : ${DateFormat('d MMM yyyy').format(widget.storeObject.visitDate!)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: const Text(
-                          'online store',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                          ),
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'No.Telp : ${widget.storeObject.contactToko}',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
                       ),
-                      Text(
-                        'Tanggal Bergabung : ${DateFormat('d MMM yyyy').format(widget.storeObject.visitDate!)}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'No.Telp : ${widget.storeObject.contactToko}',
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               Card(
@@ -247,6 +318,7 @@ class _StoreProfileState extends State<StoreProfile> {
                               style: const TextStyle(
                                 color: Colors.blue,
                                 fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -326,18 +398,20 @@ class _StoreProfileState extends State<StoreProfile> {
                           color: Colors.white,
                         ),
                         label: const Text(
-                          // 'GPS Coordinate',
                           'Update data GPS',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      widget.storeObject.storeImageUrl.isNotEmpty
+                      widget.storeObject.latitude != null &&
+                              widget.storeObject.longitude != null
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                _latLongContainer('Latitude', '8771256688'),
-                                _latLongContainer('Longitude', '0987621256'),
+                                _latLongContainer('Latitude',
+                                    widget.storeObject.latitude.toString()),
+                                _latLongContainer('Longitude',
+                                    widget.storeObject.longitude.toString()),
                               ],
                             )
                           : Container(
