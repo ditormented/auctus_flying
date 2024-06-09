@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:auctus_call/utilities/colors.dart';
+import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/call_document_object.dart';
 import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/purchase_document_object.dart';
 import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/store_visit_history.dart';
 import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/store_order_history.dart';
@@ -120,10 +121,11 @@ class _StoreProfileState extends State<StoreProfile> {
   }
 
   List<PurchaseDocumentObject> listPurchase = [];
+  List<CallDocumentObject> listCall = [];
 
   Future collectAllCall() async {
     log('widget.storeObject.storeId ${widget.storeObject.storeId}');
-    List<String> listCallID = [];
+
     List<PurchaseDocumentObject> listPurchase = [];
 
     try {
@@ -135,8 +137,33 @@ class _StoreProfileState extends State<StoreProfile> {
 
       log('callsSnapshot.docs.length: ${callsSnapshot.docs.length}'); // Log jumlah dokumen yang ditemukan
 
+      List<CallDocumentObject> listCall1 = [];
       for (var doc in callsSnapshot.docs) {
-        listCallID.add(doc.id);
+        final data = doc.data()
+                as Map<String, dynamic>?; // Cast to Map<String, dynamic>?
+        Timestamp? docTimestamp = data?.containsKey('timestamp') == true
+                ? doc['timestamp'] as Timestamp?
+                : null;
+            DateTime? visitDate = docTimestamp?.toDate();
+        listCall1.add(
+          CallDocumentObject(
+            address: doc["address"] ?? '',
+            callResult: doc["callResult"] ?? '',
+            email: doc["email"] ?? '',
+            imageUrl: doc["imageURL"] ?? '',
+            kabupaten: doc["kabupaten"] ?? '',
+            name: doc["name"] ?? '',
+            picContact: doc["picContact"] ?? '',
+            picName: doc["picName"] ?? '',
+            planType: doc["planType"] ?? '',
+            province: doc["province"] ?? '',
+            status: doc["status"] ?? '',
+            storeID: doc["storeID"] ?? '',
+            storeName: doc["storeName"] ?? '',
+            dateTime: visitDate ?? DateTime.now(),
+          ),
+        );
+        log("callSnaphot.timeStamp = ${doc["timestamp"]}");
         try {
           QuerySnapshot purchaseSnapshot = await FirebaseFirestore.instance
               .collection('purchases')
@@ -145,7 +172,7 @@ class _StoreProfileState extends State<StoreProfile> {
 
           if (purchaseSnapshot.docs.isNotEmpty) {
             var purchaseDoc = purchaseSnapshot.docs[0];
-            log("purchaseSnapshot.id => ${purchaseDoc.id}");
+            log("purchaseSnapshot.id => ${purchaseDoc['timestamp']}");
 
             try {
               List<Map<String, dynamic>> items =
@@ -154,7 +181,9 @@ class _StoreProfileState extends State<StoreProfile> {
                 PurchaseDocumentObject(
                   callID: purchaseDoc["callID"] ?? '',
                   items: items,
-                  timestamp: (purchaseDoc["timestamp"] as Timestamp).toDate(),
+                  timestamp: purchaseDoc["timestamp"].isNotEmpty
+                      ? (purchaseDoc["timestamp"] as Timestamp).toDate()
+                      : DateTime.now(),
                   total: purchaseDoc["total"] ?? 0.0,
                   userID: purchaseDoc["userID"] ?? '',
                 ),
@@ -169,11 +198,14 @@ class _StoreProfileState extends State<StoreProfile> {
           log("Error getting purchase document with ID ${doc.id} => $e");
         }
       }
+      setState(() {
+        listCall = listCall1;
+      });
     } catch (e) {
       log("Error getting calls documents => $e");
     }
 
-    log('listCallID -> ${listCallID.length}');
+    log('listCallID -> ${listCall.length}');
     log('listPurchase -> $listPurchase');
     calculateTotalPurchases(listPurchase);
   }
@@ -493,14 +525,12 @@ class _StoreProfileState extends State<StoreProfile> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  selectHistory == EnumSelectHistory.visitHistory
-                      ? StoreVisitHistory(
-                          storeObject: widget.storeObject,
-                          userID: widget.userID)
-                      : selectHistory == EnumSelectHistory.orderHistory
-                          ? const StoreOrderHistory()
-                          : const StoreOrderHistory(),
+              builder: (context) => selectHistory ==
+                      EnumSelectHistory.visitHistory
+                  ? StoreVisitHistory(listCall: listCall, userID: widget.userID)
+                  : selectHistory == EnumSelectHistory.orderHistory
+                      ? const StoreOrderHistory()
+                      : const StoreOrderHistory(),
             ),
           );
           if (selectHistory == EnumSelectHistory.visitHistory) {

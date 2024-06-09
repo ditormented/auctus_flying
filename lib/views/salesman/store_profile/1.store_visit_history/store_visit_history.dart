@@ -1,75 +1,62 @@
 import 'package:auctus_call/utilities/colors.dart';
-import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
+import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/call_document_object.dart';
 import 'package:flutter/material.dart';
 import 'package:timeline_tile/timeline_tile.dart';
+import 'package:intl/intl.dart';
 
 class StoreVisitHistory extends StatefulWidget {
-  final StoreObject storeObject;
+  final List<CallDocumentObject> listCall;
   final String userID;
   const StoreVisitHistory(
-      {super.key, required this.storeObject, required this.userID});
+      {super.key, required this.listCall, required this.userID});
 
   @override
   _StoreVisitHistoryState createState() => _StoreVisitHistoryState();
 }
 
 class _StoreVisitHistoryState extends State<StoreVisitHistory> {
-  List<TimelineEvent> events = [
-    TimelineEvent(
-        time: '9 - 11am', title: 'Finish Home Screen', description: 'Web App'),
-    TimelineEvent(time: '12pm', title: 'Lunch Break', description: 'Main Room'),
-    TimelineEvent(
-        time: '3 - 4pm', title: 'Design Stand Up', description: 'Hangouts'),
-    TimelineEvent(time: '5pm', title: 'New Icon', description: 'Mobile App'),
-  ];
-
-  void addEvent() {
-    setState(() {
-      events.add(TimelineEvent(
-        time: '6pm',
-        title: 'New Event',
-        description: 'New Description',
-      ));
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    List<CallDocumentObject> listCall =
+        List<CallDocumentObject>.from(widget.listCall.reversed);
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Visit History',
           style: TextStyle(color: Colors.white),
         ),
+        foregroundColor: Colors.white,
         backgroundColor: mainColor,
       ),
       body: ListView.builder(
-        itemCount: events.length,
+        itemCount: listCall.length,
         itemBuilder: (context, index) {
           return timelineTile(
             context,
-            time: events[index].time,
-            title: events[index].title,
-            description: events[index].description,
+            time: listCall[index].dateTime,
+            title: listCall[index].dateTime,
+            description: widget.listCall[index].status,
+            imageUrl: listCall[index].imageUrl,
             isFirst: index == 0,
-            isLast: index == events.length - 1,
+            isLast: index == widget.listCall.length - 1,
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: addEvent,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.red,
       ),
     );
   }
 
   TimelineTile timelineTile(BuildContext context,
-      {required String time,
-      required String title,
+      {required DateTime time,
+      required DateTime title,
       required String description,
+      required String imageUrl,
       bool isFirst = false,
       bool isLast = false}) {
+    final DateFormat timeFormat = DateFormat('HH:mm');
+    final DateFormat dateFormat = DateFormat('EEE, dd MMM yyyy');
+    String formattedTime = timeFormat.format(time);
+    String formattedDate = dateFormat.format(title);
+
     return TimelineTile(
       alignment: TimelineAlign.start,
       isFirst: isFirst,
@@ -82,39 +69,65 @@ class _StoreVisitHistoryState extends State<StoreVisitHistory> {
       endChild: Container(
         constraints: BoxConstraints(minHeight: 80),
         padding: EdgeInsets.all(16),
-        color: Colors.white,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(
-              time,
-              style: TextStyle(fontWeight: FontWeight.bold),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.network(
+                imageUrl,
+                height: 50.0,
+                width: 50.0,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.error,
+                    color: Colors.red,
+                    size: 50.0,
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return SizedBox(
+                    height: 50.0,
+                    width: 50.0,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                (loadingProgress.expectedTotalBytes ?? 1)
+                            : null,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-            SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              description,
-              style: TextStyle(color: Colors.grey),
+            SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  formattedTime,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  formattedDate,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  description,
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
             ),
           ],
         ),
       ),
       beforeLineStyle: LineStyle(
         color: Colors.grey,
-        thickness: 6,
+        thickness: 2,
       ),
     );
   }
-}
-
-class TimelineEvent {
-  final String time;
-  final String title;
-  final String description;
-
-  TimelineEvent(
-      {required this.time, required this.title, required this.description});
 }
