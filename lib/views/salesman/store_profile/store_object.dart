@@ -11,7 +11,7 @@ class StoreObject {
   String selectedProvince;
   String status;
   String storeName;
-  DateTime? visitDate;
+  DateTime visitDate;
   double latitude;
   double longitude;
   String storeImageUrl;
@@ -28,9 +28,9 @@ class StoreObject {
     required this.selectedProvince,
     required this.status,
     required this.storeName,
+    required this.visitDate,
     required this.latitude,
     required this.longitude,
     required this.storeImageUrl,
-    this.visitDate,
   });
 }

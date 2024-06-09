@@ -1,13 +1,11 @@
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/form_call.dart';
-import 'package:auctus_call/views/salesman/listcall.dart';
-import 'package:auctus_call/views/salesman/product_list.dart';
 import 'package:auctus_call/views/salesman/promotion_list.dart';
 import 'package:auctus_call/views/salesman/scraping_form.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_list.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
   final String documentID;
@@ -207,8 +205,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            SizedBox(height: 8),
-                            Text(
+                            const SizedBox(height: 8),
+                            const Text(
                               'Main Menu',
                               style: TextStyle(
                                 fontSize: 20,
@@ -216,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: mainColor,
                               ),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             ElevatedButton(
                               onPressed: () {
                                 Navigator.push(
@@ -230,17 +228,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: mainColor,
-                                minimumSize: Size(double.infinity, 50),
+                                minimumSize: const Size(double.infinity, 50),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              child: Text(
+                              child: const Text(
                                 'Store Scraping',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                                 height: 8), // Menambahkan jarak antara tombol
                             ElevatedButton(
                               onPressed: () {
@@ -255,17 +253,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: mainColor,
-                                minimumSize: Size(double.infinity, 50),
+                                minimumSize: const Size(double.infinity, 50),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              child: Text(
+                              child: const Text(
                                 'Form Call',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             ElevatedButton(
                               onPressed: () {
                                 Navigator.push(
@@ -277,18 +275,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: mainColor,
-                                minimumSize: Size(double.infinity, 50),
+                                minimumSize: const Size(double.infinity, 50),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              child: Text(
+                              child:const  Text(
                                 'Promotion Info',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
-                            SizedBox(height: 16),
-                            Text(
+                            const SizedBox(height: 16),
+                            const Text(
                               'Daily Update',
                               style: TextStyle(
                                 fontSize: 20,
@@ -296,13 +294,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: mainColor,
                               ),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'Selected Date: ${DateFormat.yMMMMd().format(_selectedDate)}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     color: mainColor,
                                   ),
@@ -317,12 +315,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
-                                  child: Icon(Icons.calendar_today,
+                                  child:const  Icon(Icons.calendar_today,
                                       color: Colors.white),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             GridView.count(
                               shrinkWrap: true,
                               crossAxisCount: 2,
@@ -335,42 +333,42 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
-                                        Color.fromARGB(255, 38, 77, 141),
+                                        const Color.fromARGB(255, 38, 77, 141),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                   ),
-                                  icon: Icon(Icons.store, color: Colors.white),
+                                  icon: const Icon(Icons.store, color: Colors.white),
                                   label: Text(
                                       'Store Scraped Total ($_storeCount)',
-                                      style: TextStyle(color: Colors.white)),
+                                      style: const TextStyle(color: Colors.white)),
                                 ),
                                 ElevatedButton.icon(
                                   onPressed: () {},
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
-                                        Color.fromARGB(255, 194, 162, 47),
+                                        const Color.fromARGB(255, 194, 162, 47),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(5),
                                     ),
                                   ),
-                                  icon: Icon(Icons.call, color: Colors.white),
+                                  icon: const Icon(Icons.call, color: Colors.white),
                                   label: Text('Amount Of Call ($_callCount)',
-                                      style: TextStyle(color: Colors.white)),
+                                      style: const TextStyle(color: Colors.white)),
                                 ),
                                 ElevatedButton.icon(
                                   onPressed: () {},
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
-                                        Color.fromARGB(255, 24, 120, 97),
+                                        const Color.fromARGB(255, 24, 120, 97),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(5),
                                     ),
                                   ),
-                                  icon: Icon(Icons.check_circle,
+                                  icon: const Icon(Icons.check_circle,
                                       color: Colors.white),
                                   label: Text('Effective Call ($_ecTotal)',
-                                      style: TextStyle(color: Colors.white)),
+                                      style: const TextStyle(color: Colors.white)),
                                 ),
                                 ElevatedButton.icon(
                                   onPressed: () {},
@@ -381,16 +379,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(5),
                                     ),
                                   ),
-                                  icon: Icon(Icons.cancel, color: Colors.white),
+                                  icon: const Icon(Icons.cancel, color: Colors.white),
                                   label: Text('Rejected Call ($_rejectTotal)',
-                                      style: TextStyle(color: Colors.white)),
+                                      style: const TextStyle(color: Colors.white)),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
@@ -440,32 +438,32 @@ class ProfileHeader extends SliverPersistentHeaderDelegate {
         children: [
           Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, size: 40, color: mainColor),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     currentDate,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     userName,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'Role',
                     style: TextStyle(
                       fontSize: 16,
