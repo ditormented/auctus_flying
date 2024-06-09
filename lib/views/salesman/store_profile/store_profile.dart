@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_null_comparison
+
 import 'dart:async';
 import 'dart:developer';
 
@@ -259,7 +261,7 @@ class _StoreProfileState extends State<StoreProfile> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Tanggal Bergabung : ${DateFormat('d MMM yyyy').format(widget.storeObject.visitDate!)}',
+                      'Tanggal Bergabung : ${DateFormat('d MMM yyyy').format(widget.storeObject.visitDate)}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],

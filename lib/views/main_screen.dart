@@ -83,7 +83,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       HomeScreen(documentID: widget.ID),
       ProductList(userID: widget.ID),
       StoreList(userID: widget.ID),
@@ -112,7 +112,7 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(CupertinoIcons.person), label: 'Profile')
         ],
       ),
-      body: _pages[_pageIndex],
+      body: pages[_pageIndex],
     );
   }
 }

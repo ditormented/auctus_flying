@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 
 class ListCall extends StatefulWidget {
   final String userID;
-  ListCall({super.key, required this.userID});
+  const ListCall({super.key, required this.userID});
 
   @override
-  State<ListCall> createState() => _StoreListState();
+  State<ListCall> createState() => _ListCallState();
 }
 
-class _StoreListState extends State<ListCall> {
+class _ListCallState extends State<ListCall> {
   CollectionReference stores = FirebaseFirestore.instance.collection('stores');
   TextEditingController searchStoreController = TextEditingController();
   List<StoreObject> listStore = [];
@@ -262,15 +262,15 @@ class _StoreListState extends State<ListCall> {
                                   trailing: const Icon(Icons.arrow_forward_ios,
                                       color: mainColor),
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => StoreVisitHistory(
-                                          storeObject: store,
-                                          userID: widget.userID,
-                                        ),
-                                      ),
-                                    );
+                                    // Navigator.push(
+                                    //   context,
+                                    //   MaterialPageRoute(
+                                    //     builder: (context) => StoreVisitHistory(
+                                    //       storeObject: store,
+                                    //       userID: widget.userID,
+                                    //     ),
+                                    //   ),
+                                    // );
                                   },
                                 ),
                               );
