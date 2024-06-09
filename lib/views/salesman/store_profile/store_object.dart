@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class StoreObject {
   String storeId;
   String address;
@@ -13,7 +11,10 @@ class StoreObject {
   String selectedProvince;
   String status;
   String storeName;
-  DateTime? visitDate;
+  DateTime visitDate;
+  double latitude;
+  double longitude;
+  String storeImageUrl;
   StoreObject({
     required this.storeId,
     required this.address,
@@ -27,6 +28,9 @@ class StoreObject {
     required this.selectedProvince,
     required this.status,
     required this.storeName,
-    this.visitDate,
+    required this.visitDate,
+    required this.latitude,
+    required this.longitude,
+    required this.storeImageUrl,
   });
 }
