@@ -1,8 +1,10 @@
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/form_call.dart';
+import 'package:auctus_call/views/salesman/listcall.dart';
 import 'package:auctus_call/views/salesman/product_list.dart';
 import 'package:auctus_call/views/salesman/promotion_list.dart';
 import 'package:auctus_call/views/salesman/scraping_form.dart';
+import 'package:auctus_call/views/salesman/store_profile/store_list.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -111,9 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
           .where('callResult', isEqualTo: 'purchase')
-          .where('timestamp',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          // .where('timestamp',
+          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -135,9 +137,9 @@ class _HomeScreenState extends State<HomeScreen> {
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
           .where('callResult', isEqualTo: 'reject')
-          .where('timestamp',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          // .where('timestamp',
+          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -328,7 +330,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               crossAxisSpacing: 8,
                               children: [
                                 ElevatedButton.icon(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    StoreList(userID: widget.documentID);
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
                                         Color.fromARGB(255, 38, 77, 141),
