@@ -1,7 +1,6 @@
-import 'dart:developer';
 import 'package:auctus_call/utilities/colors.dart';
-import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/store_visit_history.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
+import 'package:auctus_call/views/salesman/store_profile/store_profile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -110,6 +109,15 @@ class _StoreListState extends State<StoreList> {
                   ? data!['storeName'] ?? ''
                   : '',
               visitDate: visitDate ?? DateTime.now(),
+              latitude: data?.containsKey('latitude') == true
+                  ? data!['latitude']
+                  : 0.0,
+              longitude: data?.containsKey('longitude') == true
+                  ? data!['longitude']
+                  : 0.0,
+              storeImageUrl: data?.containsKey('storeImageUrl') == true
+                  ? data!['storeImageUrl']
+                  : '',
             );
           },
         ).toList();
@@ -200,6 +208,22 @@ class _StoreListState extends State<StoreList> {
             style: const TextStyle(color: mainColor),
           ),
         ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(32),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 24, bottom: 8),
+                child: Text(
+                  'Total Stores(${filteredStore.length})',
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -257,7 +281,7 @@ class _StoreListState extends State<StoreList> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => StoreVisitHistory(
+                                        builder: (context) => StoreProfile(
                                           storeObject: store,
                                           userID: widget.userID,
                                         ),
@@ -293,7 +317,6 @@ class _StoreListState extends State<StoreList> {
                                   child: const Icon(
                                     Icons.first_page,
                                     color: Colors.white,
-                                    size: 40,
                                   ),
                                 ),
                               ),
@@ -309,22 +332,18 @@ class _StoreListState extends State<StoreList> {
                                   child: const Icon(
                                     Icons.chevron_left,
                                     color: Colors.white,
-                                    size: 40,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Text("$currentPage",
                                   style: const TextStyle(
-                                      fontSize: 18,
                                       fontWeight: FontWeight.bold)),
                               const Text(" / ",
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold)),
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               Text("$totalPages",
                                   style: const TextStyle(
-                                      fontSize: 18,
                                       fontWeight: FontWeight.bold)),
                               const SizedBox(width: 8),
                               // Next Page Button
@@ -338,7 +357,6 @@ class _StoreListState extends State<StoreList> {
                                   child: const Icon(
                                     Icons.chevron_right,
                                     color: Colors.white,
-                                    size: 40,
                                   ),
                                 ),
                               ),
@@ -354,30 +372,10 @@ class _StoreListState extends State<StoreList> {
                                   child: const Icon(
                                     Icons.last_page,
                                     color: Colors.white,
-                                    size: 40,
                                   ),
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                      Card(
-                        color: const Color.fromARGB(255, 38, 77, 141),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 4, horizontal: 16),
-                          child: Text(
-                            'Total Stores\n(${filteredStore.length})',
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                            textAlign: TextAlign.left,
                           ),
                         ),
                       ),

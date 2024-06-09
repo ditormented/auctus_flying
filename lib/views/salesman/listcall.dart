@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/store_visit_history.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
@@ -7,13 +6,13 @@ import 'package:flutter/material.dart';
 
 class ListCall extends StatefulWidget {
   final String userID;
-  ListCall({super.key, required this.userID});
+  const ListCall({super.key, required this.userID});
 
   @override
-  State<ListCall> createState() => _StoreListState();
+  State<ListCall> createState() => _ListCallState();
 }
 
-class _StoreListState extends State<ListCall> {
+class _ListCallState extends State<ListCall> {
   CollectionReference stores = FirebaseFirestore.instance.collection('calls');
   TextEditingController searchStoreController = TextEditingController();
   List<StoreObject> listStore = [];
@@ -110,6 +109,15 @@ class _StoreListState extends State<ListCall> {
                   ? data!['storeName'] ?? ''
                   : '',
               visitDate: visitDate ?? DateTime.now(),
+              latitude: data?.containsKey('latitude') == true
+                  ? data!['latitude'] ?? ''
+                  : 0.0,
+              longitude: data?.containsKey('longitude') == true
+                  ? data!['longitude'] ?? ''
+                  : 0.0,
+              storeImageUrl: data?.containsKey('storeImageUrl') == true
+                  ? data!['storeImageUrl'] ?? ''
+                  : '',
             );
           },
         ).toList();
@@ -254,15 +262,15 @@ class _StoreListState extends State<ListCall> {
                                   trailing: const Icon(Icons.arrow_forward_ios,
                                       color: mainColor),
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => StoreVisitHistory(
-                                          storeObject: store,
-                                          userID: widget.userID,
-                                        ),
-                                      ),
-                                    );
+                                    // Navigator.push(
+                                    //   context,
+                                    //   MaterialPageRoute(
+                                    //     builder: (context) => StoreVisitHistory(
+                                    //       storeObject: store,
+                                    //       userID: widget.userID,
+                                    //     ),
+                                    //   ),
+                                    // );
                                   },
                                 ),
                               );
