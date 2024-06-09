@@ -14,7 +14,7 @@ class ListCall extends StatefulWidget {
 }
 
 class _StoreListState extends State<ListCall> {
-  CollectionReference stores = FirebaseFirestore.instance.collection('stores');
+  CollectionReference stores = FirebaseFirestore.instance.collection('calls');
   TextEditingController searchStoreController = TextEditingController();
   List<StoreObject> listStore = [];
   List<StoreObject> filteredStore = [];
@@ -80,8 +80,8 @@ class _StoreListState extends State<ListCall> {
               address: data?.containsKey('address') == true
                   ? data!['address'] ?? ''
                   : '',
-              contactToko: data?.containsKey('contactToko') == true
-                  ? data!['contactToko'] ?? ''
+              contactToko: data?.containsKey('picContact') == true
+                  ? data!['picContact'] ?? ''
                   : '',
               email: data?.containsKey('email') == true
                   ? data!['email'] ?? ''
