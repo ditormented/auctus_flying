@@ -39,6 +39,7 @@ class _RejectedScreenState extends State<RejectedScreen> {
   }
 
   CollectionReference calls = FirebaseFirestore.instance.collection('calls');
+
   Future<void> submitForm() async {
     var productsComparison = [];
     for (int i = 0; i < _productControllers.length; i++) {
@@ -49,32 +50,33 @@ class _RejectedScreenState extends State<RejectedScreen> {
       });
     }
 
-    var body = {};
-    await calls.add(widget.callVariable).then((value) {
-      body = {
+    try {
+      // Menyimpan dokumen ke koleksi 'calls' terlebih dahulu
+      DocumentReference callRef = await calls.add(widget.callVariable);
+
+      var body = {
         'storeID': widget.storeID,
-        'callID': value.id,
+        'callID': callRef.id,
         'reasonReject': _reasonController.text,
         'selectReason': _selectedReason,
         'productsComparison': productsComparison,
       };
-    }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save call data: $error')),
-      );
-    });
-    // var
-    print('$body');
-    try {
+
+      print('Body to be added to reason collection: $body');
+
+      // Menyimpan dokumen ke koleksi 'reason'
       await reason.add(body);
-      // Display success notification
+      print('Successfully added to reason collection');
+
+      // Menampilkan notifikasi sukses
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Form submitted successfully!'),
           backgroundColor: Colors.green,
         ),
       );
-      // Navigate to HomeScreen
+
+      // Navigasi ke HomeScreen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -84,7 +86,8 @@ class _RejectedScreenState extends State<RejectedScreen> {
         ),
       );
     } catch (e) {
-      // Display error notification
+      print('Failed to submit form: $e');
+      // Menampilkan notifikasi error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to submit form. Please try again.'),

@@ -14,11 +14,15 @@ class ProductList extends StatefulWidget {
   State<ProductList> createState() => _ProductListState();
 }
 
-class _ProductListState extends State<ProductList> {
+class _ProductListState extends State<ProductList>
+    with TickerProviderStateMixin {
   List<Map<String, dynamic>> items = [];
   List<Map<String, dynamic>> filteredItems = [];
   late TextEditingController _searchController;
   bool isLoading = true;
+
+  late TabController _brandTabController;
+  late TabController _categoryTabController;
 
   @override
   void initState() {
@@ -26,11 +30,16 @@ class _ProductListState extends State<ProductList> {
     _searchController = TextEditingController();
     _searchController.addListener(_filterItems);
     _fetchItems();
+    _brandTabController = TabController(length: brands.length, vsync: this);
+    _categoryTabController =
+        TabController(length: categories.length, vsync: this);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _brandTabController.dispose();
+    _categoryTabController.dispose();
     super.dispose();
   }
 
@@ -74,10 +83,10 @@ class _ProductListState extends State<ProductList> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
       ),
-      margin: const EdgeInsets.all(8.0),
+      margin: const EdgeInsets.all(12.0), // Increased margin
       elevation: 5,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0), // Increased padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -85,7 +94,7 @@ class _ProductListState extends State<ProductList> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(15.0),
                 child: Image.network(
-                  item['image'] ?? 'https://via.placeholder.com/150',
+                  item['image'] ?? 'Icon(Icons.adobe_rounded)',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: 150,
@@ -94,27 +103,31 @@ class _ProductListState extends State<ProductList> {
                 ),
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 12), // Increased spacing
             Text(
               item['Name'] ?? 'No name',
               style: TextStyle(
                 color: Colors.black,
-                fontSize: 16,
+                fontSize: 18, // Increased font size
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 4),
+            SizedBox(height: 6), // Increased spacing
             Text(
               'Code: ${item['Code']?.toString() ?? 'No code'}',
-              style: TextStyle(color: Colors.black54, fontSize: 12),
+              style: TextStyle(color: Colors.black54, fontSize: 14),
             ),
             Text(
               'Price: Rp ${item['ppnPrice']?.toString() ?? 'No price'}',
-              style: TextStyle(color: Colors.black54, fontSize: 12),
+              style: TextStyle(color: Colors.black54, fontSize: 14),
             ),
             Text(
-              'Stock: ${item['quantityCbr']?.toString() ?? 'No stock info'}',
-              style: TextStyle(color: Colors.black54, fontSize: 12),
+              'Stock Cibubur: ${item['quantityCbr']?.toString() ?? 'No stock info'}',
+              style: TextStyle(color: Colors.black54, fontSize: 14),
+            ),
+            Text(
+              'Stock Sidoarjo: ${item['quantitySda']?.toString() ?? 'No stock info'}',
+              style: TextStyle(color: Colors.black54, fontSize: 14),
             ),
           ],
         ),
@@ -122,86 +135,122 @@ class _ProductListState extends State<ProductList> {
     );
   }
 
+  final List<String> categories = [
+    'Nivea Sun',
+    'Nivea Men',
+    'Nivea Deodorant',
+    'NCRM Cremes',
+    'Nivea Body',
+    'Nivea Deodorant Men',
+    'Nivea Face Care',
+    'NCL Lip Care'
+  ];
+  final List<String> brands = ['Beiersdorf', 'PASEO'];
+
   @override
   Widget build(BuildContext context) {
-    final List<String> categories = [
-      'Nivea Sun',
-      'Nivea Men',
-      'Nivea Deodorant',
-      'NCRM Cremes',
-      'Nivea Body',
-      'Nivea Deodorant Men',
-      'Nivea Face Care',
-      'NCL Lip Care'
-    ];
-
-    return DefaultTabController(
-      length: categories.length,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        elevation: 5,
         backgroundColor: mainColor,
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          elevation: 5,
-          backgroundColor: mainColor,
-          title: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: TextFormField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide.none,
-                ),
-                fillColor: Colors.white,
-                filled: true,
-                prefixIcon: Icon(Icons.search, color: mainColor),
-                contentPadding: EdgeInsets.symmetric(vertical: 10.0),
+        title: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: TextFormField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide.none,
               ),
-              style: TextStyle(color: mainColor),
+              fillColor: Colors.white,
+              filled: true,
+              prefixIcon: Icon(Icons.search, color: mainColor),
+              contentPadding: EdgeInsets.symmetric(vertical: 10.0),
             ),
-          ),
-          bottom: TabBar(
-            isScrollable: true,
-            indicator: UnderlineTabIndicator(
-              borderSide: BorderSide(color: secColor, width: 4.0),
-              insets: EdgeInsets.symmetric(horizontal: 16.0),
-            ),
-            unselectedLabelColor: Colors.white,
-            labelColor: Colors.white,
-            tabs: categories.map((String category) {
-              return Tab(text: category);
-            }).toList(),
+            style: TextStyle(color: mainColor),
           ),
         ),
-        body: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : TabBarView(
-                children: categories.map((String category) {
-                  List<Map<String, dynamic>> categoryItems =
-                      filteredItems.where((item) {
-                    return item['Category'] == category;
-                  }).toList();
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(8.0),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemCount: categoryItems.length,
-                    itemBuilder: (context, index) {
-                      final item = categoryItems[index];
-                      return _buildItemCard(item);
-                    },
-                  );
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(110.0),
+          child: Column(
+            children: [
+              TabBar(
+                controller: _brandTabController,
+                isScrollable: true,
+                indicator: UnderlineTabIndicator(
+                  borderSide: BorderSide(color: secColor, width: 4.0),
+                  insets: EdgeInsets.symmetric(horizontal: 16.0),
+                ),
+                unselectedLabelColor: Colors.white,
+                labelColor: Colors.white,
+                tabs: brands.map((String brand) {
+                  return Tab(text: brand);
                 }).toList(),
               ),
+              TabBar(
+                controller: _categoryTabController,
+                isScrollable: true,
+                indicator: UnderlineTabIndicator(
+                  borderSide: BorderSide(color: secColor, width: 4.0),
+                  insets: EdgeInsets.symmetric(horizontal: 16.0),
+                ),
+                unselectedLabelColor: Colors.white,
+                labelColor: Colors.white,
+                tabs: categories.map((String category) {
+                  return Tab(text: category);
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
       ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _brandTabController,
+              children: brands.map((String brand) {
+                List<Map<String, dynamic>> brandItems =
+                    filteredItems.where((item) {
+                  return item['brand'] == brand;
+                }).toList();
+                return Column(
+                  children: [
+                    Expanded(
+                      child: TabBarView(
+                        controller: _categoryTabController,
+                        children: categories.map((String category) {
+                          List<Map<String, dynamic>> categoryItems =
+                              brandItems.where((item) {
+                            return item['Category'] == category;
+                          }).toList();
+                          return GridView.builder(
+                            padding: const EdgeInsets.all(8.0),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.75,
+                            ),
+                            itemCount: categoryItems.length,
+                            itemBuilder: (context, index) {
+                              final item = categoryItems[index];
+                              return _buildItemCard(item);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
     );
   }
 }
