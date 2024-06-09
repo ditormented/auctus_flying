@@ -69,8 +69,8 @@ class _StoreListState extends State<StoreList> {
           (doc) {
             final data = doc.data()
                 as Map<String, dynamic>?; // Cast to Map<String, dynamic>?
-            Timestamp? docTimestamp = data?.containsKey('visitDate') == true
-                ? data!['visitDate'] as Timestamp?
+            Timestamp? docTimestamp = data?.containsKey('timestamp') == true
+                ? data!['timestamp'] as Timestamp?
                 : null;
             DateTime? visitDate = docTimestamp?.toDate();
 
@@ -241,15 +241,15 @@ class _StoreListState extends State<StoreList> {
                               final store = _getPaginatedStores()[index];
                               return Card(
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15.0),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                                margin: const EdgeInsets.all(8.0),
+                                // margin: const EdgeInsets.all(8.0),
                                 elevation: 5,
                                 child: ListTile(
-                                  contentPadding: const EdgeInsets.all(16.0),
+                                  // contentPadding: const EdgeInsets.all(16.0),
                                   tileColor: Colors.white,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15.0),
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
                                   title: Text(
                                     store.storeName,
