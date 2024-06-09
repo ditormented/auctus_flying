@@ -174,6 +174,7 @@ class _FormCallState extends State<FormCall> {
         context,
         MaterialPageRoute(
             builder: (context) => RejectedScreen(
+                  userID: widget.documentID,
                   storeID: selectedStore!.storeId,
                   callVariable: callVariable,
                   // callID: callID,

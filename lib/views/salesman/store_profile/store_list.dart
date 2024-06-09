@@ -69,8 +69,8 @@ class _StoreListState extends State<StoreList> {
           (doc) {
             final data = doc.data()
                 as Map<String, dynamic>?; // Cast to Map<String, dynamic>?
-            Timestamp? docTimestamp = data?.containsKey('visitDate') == true
-                ? data!['visitDate'] as Timestamp?
+            Timestamp? docTimestamp = data?.containsKey('timestamp') == true
+                ? data!['timestamp'] as Timestamp?
                 : null;
             DateTime? visitDate = docTimestamp?.toDate();
 
@@ -217,7 +217,9 @@ class _StoreListState extends State<StoreList> {
                 child: Text(
                   'Total Stores(${filteredStore.length})',
                   style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                   textAlign: TextAlign.left,
                 ),
               ),

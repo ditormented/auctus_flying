@@ -83,36 +83,36 @@ class _ProductListState extends State<ProductList>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
       ),
-      margin: const EdgeInsets.all(12.0), // Increased margin
+      margin: const EdgeInsets.all(8.0), // Adjusted margin
       elevation: 5,
       child: Padding(
-        padding: const EdgeInsets.all(20.0), // Increased padding
+        padding: const EdgeInsets.all(16.0), // Adjusted padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            Container(
+              height: 120,
+              width: double.infinity,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(15.0),
                 child: Image.network(
-                  item['image'] ?? 'Icon(Icons.adobe_rounded)',
+                  item['image'] ?? 'https://via.placeholder.com/150',
                   fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: 150,
                   errorBuilder: (context, error, stackTrace) =>
                       Center(child: Icon(Icons.error)),
                 ),
               ),
             ),
-            SizedBox(height: 12), // Increased spacing
+            SizedBox(height: 8),
             Text(
               item['Name'] ?? 'No name',
               style: TextStyle(
                 color: Colors.black,
-                fontSize: 18, // Increased font size
+                fontSize: 16, // Adjusted font size
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 6), // Increased spacing
+            SizedBox(height: 4),
             Text(
               'Code: ${item['Code']?.toString() ?? 'No code'}',
               style: TextStyle(color: Colors.black54, fontSize: 14),
@@ -161,7 +161,7 @@ class _ProductListState extends State<ProductList>
         elevation: 5,
         backgroundColor: mainColor,
         title: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 10.0),
           child: TextFormField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -179,7 +179,7 @@ class _ProductListState extends State<ProductList>
           ),
         ),
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(110.0),
+          preferredSize: Size.fromHeight(50.0),
           child: Column(
             children: [
               TabBar(
@@ -195,36 +195,36 @@ class _ProductListState extends State<ProductList>
                   return Tab(text: brand);
                 }).toList(),
               ),
-              TabBar(
-                controller: _categoryTabController,
-                isScrollable: true,
-                indicator: UnderlineTabIndicator(
-                  borderSide: BorderSide(color: secColor, width: 4.0),
-                  insets: EdgeInsets.symmetric(horizontal: 16.0),
-                ),
-                unselectedLabelColor: Colors.white,
-                labelColor: Colors.white,
-                tabs: categories.map((String category) {
-                  return Tab(text: category);
-                }).toList(),
-              ),
             ],
           ),
         ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _brandTabController,
-              children: brands.map((String brand) {
-                List<Map<String, dynamic>> brandItems =
-                    filteredItems.where((item) {
-                  return item['brand'] == brand;
-                }).toList();
-                return Column(
-                  children: [
-                    Expanded(
-                      child: TabBarView(
+          : Column(
+              children: [
+                TabBar(
+                  controller: _categoryTabController,
+                  isScrollable: true,
+                  indicator: UnderlineTabIndicator(
+                    borderSide: BorderSide(color: secColor, width: 4.0),
+                    insets: EdgeInsets.symmetric(horizontal: 16.0),
+                  ),
+                  unselectedLabelColor: Colors.black,
+                  labelColor: Colors.black,
+                  tabs: categories.map((String category) {
+                    return Tab(text: category);
+                  }).toList(),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _brandTabController,
+                    children: brands.map((String brand) {
+                      List<Map<String, dynamic>> brandItems =
+                          filteredItems.where((item) {
+                        return item['brand'] == brand;
+                      }).toList();
+                      return TabBarView(
                         controller: _categoryTabController,
                         children: categories.map((String category) {
                           List<Map<String, dynamic>> categoryItems =
@@ -232,11 +232,11 @@ class _ProductListState extends State<ProductList>
                             return item['Category'] == category;
                           }).toList();
                           return GridView.builder(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(4.0),
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
-                              childAspectRatio: 0.75,
+                              childAspectRatio: 0.4, // Adjusted aspect ratio
                             ),
                             itemCount: categoryItems.length,
                             itemBuilder: (context, index) {
@@ -245,11 +245,11 @@ class _ProductListState extends State<ProductList>
                             },
                           );
                         }).toList(),
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
     );
   }

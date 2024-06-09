@@ -2,14 +2,18 @@ import 'package:auctus_call/utilities/colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:auctus_call/views/salesman/home_screen.dart';
+import 'package:auctus_call/views/main_screen.dart';
 
 class RejectedScreen extends StatefulWidget {
+  final String userID;
   final String storeID;
   final Map<String, dynamic> callVariable;
 
   const RejectedScreen(
-      {super.key, required this.storeID, required this.callVariable});
+      {super.key,
+      required this.storeID,
+      required this.callVariable,
+      required this.userID});
 
   @override
   _RejectedScreenState createState() => _RejectedScreenState();
@@ -21,6 +25,7 @@ class _RejectedScreenState extends State<RejectedScreen> {
   final List<TextEditingController> _productControllers = [];
   final List<TextEditingController> _productOurPriceControllers = [];
   final List<TextEditingController> _productCompetitorPriceControllers = [];
+  String storeName = '';
 
   int _wordCount = 0;
   bool _isValid = false;
@@ -39,6 +44,22 @@ class _RejectedScreenState extends State<RejectedScreen> {
   }
 
   CollectionReference calls = FirebaseFirestore.instance.collection('calls');
+
+  Future<void> _fetchStoreName() async {
+    try {
+      DocumentSnapshot storeDoc = await FirebaseFirestore.instance
+          .collection('stores')
+          .doc(widget.userID)
+          .get();
+      if (storeDoc.exists) {
+        setState(() {
+          storeName = storeDoc['storeName'] ?? 'Unknown Store';
+        });
+      }
+    } catch (e) {
+      print('Error fetching store name: $e');
+    }
+  }
 
   Future<void> submitForm() async {
     var productsComparison = [];
@@ -77,11 +98,11 @@ class _RejectedScreenState extends State<RejectedScreen> {
       );
 
       // Navigasi ke HomeScreen
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => HomeScreen(
-            documentID: widget.storeID, // Adjust if needed
+          builder: (context) => MainScreen(
+            ID: widget.userID, // Adjust if needed
           ),
         ),
       );
