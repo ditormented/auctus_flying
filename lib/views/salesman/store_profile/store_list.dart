@@ -217,7 +217,9 @@ class _StoreListState extends State<StoreList> {
                 child: Text(
                   'Total Stores(${filteredStore.length})',
                   style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                   textAlign: TextAlign.left,
                 ),
               ),

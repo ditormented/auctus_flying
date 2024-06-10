@@ -132,7 +132,7 @@ class _StoreProfileState extends State<StoreProfile> {
       QuerySnapshot callsSnapshot = await FirebaseFirestore.instance
           .collection('calls')
           .where('storeID', isEqualTo: widget.storeObject.storeId)
-          .where('callResult', isEqualTo: "purchase")
+          // .where('callResult', isEqualTo: "purchase")
           .get();
 
       log('callsSnapshot.docs.length: ${callsSnapshot.docs.length}'); // Log jumlah dokumen yang ditemukan
@@ -140,11 +140,11 @@ class _StoreProfileState extends State<StoreProfile> {
       List<CallDocumentObject> listCall1 = [];
       for (var doc in callsSnapshot.docs) {
         final data = doc.data()
-                as Map<String, dynamic>?; // Cast to Map<String, dynamic>?
+            as Map<String, dynamic>?; // Cast to Map<String, dynamic>?
         Timestamp? docTimestamp = data?.containsKey('timestamp') == true
-                ? doc['timestamp'] as Timestamp?
-                : null;
-            DateTime? visitDate = docTimestamp?.toDate();
+            ? doc['timestamp'] as Timestamp?
+            : null;
+        DateTime? visitDate = docTimestamp?.toDate();
         listCall1.add(
           CallDocumentObject(
             address: doc["address"] ?? '',
@@ -163,11 +163,12 @@ class _StoreProfileState extends State<StoreProfile> {
             dateTime: visitDate ?? DateTime.now(),
           ),
         );
-        log("callSnaphot.timeStamp = ${doc["timestamp"]}");
+        log("callsSnapshot.timeStamp = ${doc["timestamp"]}");
         try {
           QuerySnapshot purchaseSnapshot = await FirebaseFirestore.instance
               .collection('purchases')
               .where('callID', isEqualTo: doc.id)
+              .where('userID', isEqualTo: widget.userID)
               .get();
 
           if (purchaseSnapshot.docs.isNotEmpty) {
@@ -181,11 +182,13 @@ class _StoreProfileState extends State<StoreProfile> {
                 PurchaseDocumentObject(
                   callID: purchaseDoc["callID"] ?? '',
                   items: items,
-                  timestamp: purchaseDoc["timestamp"].isNotEmpty
-                      ? (purchaseDoc["timestamp"] as Timestamp).toDate()
-                      : DateTime.now(),
+                  // timestamp: purchaseDoc["timestamp"].isNotEmpty
+                  //     ? (purchaseDoc["timestamp"] as Timestamp).toDate()
+                  //     : DateTime.now(),
+                  timestamp: (purchaseDoc["timestamp"] as Timestamp).toDate(),
                   total: purchaseDoc["total"] ?? 0.0,
                   userID: purchaseDoc["userID"] ?? '',
+                  caption: purchaseDoc["caption"],
                 ),
               );
             } catch (e) {
@@ -215,7 +218,7 @@ class _StoreProfileState extends State<StoreProfile> {
       List<PurchaseDocumentObject> listPurchase) async {
     int totalPembelian = 0;
     for (var element in listPurchase) {
-      log("for listPurchase => ${element.total}");
+      log("for listPurchase => ${element.callID}");
       totalPembelian += element.total
           .round(); // Menambahkan total dari setiap elemen ke totalPembelian
     }
@@ -529,8 +532,12 @@ class _StoreProfileState extends State<StoreProfile> {
                       EnumSelectHistory.visitHistory
                   ? StoreVisitHistory(listCall: listCall, userID: widget.userID)
                   : selectHistory == EnumSelectHistory.orderHistory
-                      ? const StoreOrderHistory()
-                      : const StoreOrderHistory(),
+                      // ? const StoreOrderHistory(
+                      //     listCall: listCall, userID: widget.userID)
+                      // : const StoreOrderHistory(
+                      //     listCall: listCall, userID: widget.userID),
+                      ? StoreOrderHistory(userID: widget.userID)
+                      : StoreOrderHistory(userID: widget.userID),
             ),
           );
           if (selectHistory == EnumSelectHistory.visitHistory) {
@@ -546,10 +553,10 @@ class _StoreProfileState extends State<StoreProfile> {
           ),
           child: Text(
             selectHistory.name == EnumSelectHistory.visitHistory.name
-                ? 'VH'
+                ? 'Visit History'
                 : selectHistory.name == EnumSelectHistory.orderHistory.name
-                    ? 'OH'
-                    : 'SL',
+                    ? 'Order History'
+                    : 'Store League',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.blue,

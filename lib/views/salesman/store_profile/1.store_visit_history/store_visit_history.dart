@@ -35,7 +35,7 @@ class _StoreVisitHistoryState extends State<StoreVisitHistory> {
             context,
             time: listCall[index].dateTime,
             title: listCall[index].dateTime,
-            description: widget.listCall[index].status,
+            description: widget.listCall[index].callResult,
             imageUrl: listCall[index].imageUrl,
             isFirst: index == 0,
             isLast: index == widget.listCall.length - 1,

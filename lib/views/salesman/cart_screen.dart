@@ -105,9 +105,14 @@ class _CartScreenState extends State<CartScreen> {
       setState(() {
         widget.cartItems.clear();
       });
-      Navigator.push(
+      Navigator.pop(
         context,
-        MaterialPageRoute(builder: (context) => MainScreen(ID: widget.userID)),
+      );
+      Navigator.pop(
+        context,
+      );
+      Navigator.pop(
+        context,
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

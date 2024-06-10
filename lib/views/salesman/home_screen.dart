@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/form_call.dart';
 import 'package:auctus_call/views/salesman/promotion_list.dart';
@@ -56,17 +58,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void getStoreCount() async {
     try {
-      DateTime startOfDay =
-          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
-      DateTime endOfDay = DateTime(_selectedDate.year, _selectedDate.month,
-          _selectedDate.day, 23, 59, 59);
-
       QuerySnapshot storeSnapshot = await FirebaseFirestore.instance
           .collection('stores')
           .where('email', isEqualTo: _userEmail)
-          // .where('timestamp',
-          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -79,17 +73,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void getCallTotal() async {
     try {
-      DateTime startOfDay =
-          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      DateTime startOfDay = DateTime(_selectedDate.year, _selectedDate.month,
+          _selectedDate.day, 00, 00, 00);
       DateTime endOfDay = DateTime(_selectedDate.year, _selectedDate.month,
           _selectedDate.day, 23, 59, 59);
 
       QuerySnapshot callSnapshot = await FirebaseFirestore.instance
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
-          .where('timestamp',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          // .where('timestamp',
+          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -167,9 +161,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     getUserData();
-    getCallTotal();
-    getStoreCount();
-    getRejectTotal();
   }
 
   @override
@@ -280,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              child:const  Text(
+                              child: const Text(
                                 'Promotion Info',
                                 style: TextStyle(color: Colors.white),
                               ),
@@ -315,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
-                                  child:const  Icon(Icons.calendar_today,
+                                  child: const Icon(Icons.calendar_today,
                                       color: Colors.white),
                                 ),
                               ],
@@ -338,13 +329,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                   ),
-                                  icon: const Icon(Icons.store, color: Colors.white),
+                                  icon: const Icon(Icons.store,
+                                      color: Colors.white),
                                   label: Text(
                                       'Store Scraped Total ($_storeCount)',
-                                      style: const TextStyle(color: Colors.white)),
+                                      style:
+                                          const TextStyle(color: Colors.white)),
                                 ),
                                 ElevatedButton.icon(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    //   Navigator.push(
+                                    // context,
+                                    // MaterialPageRoute(
+                                    //   builder: (context) => StoreList(
+                                    //     userID: widget.,
+                                    //   ),
+                                    // ),
+                                    // );
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
                                         const Color.fromARGB(255, 194, 162, 47),
@@ -352,9 +354,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(5),
                                     ),
                                   ),
-                                  icon: const Icon(Icons.call, color: Colors.white),
+                                  icon: const Icon(Icons.call,
+                                      color: Colors.white),
                                   label: Text('Amount Of Call ($_callCount)',
-                                      style: const TextStyle(color: Colors.white)),
+                                      style:
+                                          const TextStyle(color: Colors.white)),
                                 ),
                                 ElevatedButton.icon(
                                   onPressed: () {},
@@ -368,7 +372,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   icon: const Icon(Icons.check_circle,
                                       color: Colors.white),
                                   label: Text('Effective Call ($_ecTotal)',
-                                      style: const TextStyle(color: Colors.white)),
+                                      style:
+                                          const TextStyle(color: Colors.white)),
                                 ),
                                 ElevatedButton.icon(
                                   onPressed: () {},
@@ -379,9 +384,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(5),
                                     ),
                                   ),
-                                  icon: const Icon(Icons.cancel, color: Colors.white),
+                                  icon: const Icon(Icons.cancel,
+                                      color: Colors.white),
                                   label: Text('Rejected Call ($_rejectTotal)',
-                                      style: const TextStyle(color: Colors.white)),
+                                      style:
+                                          const TextStyle(color: Colors.white)),
                                 ),
                               ],
                             ),
