@@ -81,9 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
       QuerySnapshot callSnapshot = await FirebaseFirestore.instance
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
-          .where('timestamp',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          // .where('timestamp',
+          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -105,9 +105,9 @@ class _HomeScreenState extends State<HomeScreen> {
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
           .where('callResult', isEqualTo: 'purchase')
-          .where('timestamp',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          // .where('timestamp',
+          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -129,9 +129,9 @@ class _HomeScreenState extends State<HomeScreen> {
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
           .where('callResult', isEqualTo: 'reject')
-          .where('timestamp',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          // .where('timestamp',
+          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -337,7 +337,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                           const TextStyle(color: Colors.white)),
                                 ),
                                 ElevatedButton.icon(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    //   Navigator.push(
+                                    // context,
+                                    // MaterialPageRoute(
+                                    //   builder: (context) => StoreList(
+                                    //     userID: widget.,
+                                    //   ),
+                                    // ),
+                                    // );
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
                                         const Color.fromARGB(255, 194, 162, 47),

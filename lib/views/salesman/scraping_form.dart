@@ -1,7 +1,8 @@
 import 'package:auctus_call/utilities/categ_list.dart';
 import 'package:auctus_call/utilities/colors.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+// import 'package:location/location.dart';
 
 enum PlanType { tiktok, unirama, shopee, tokopedia, offline, others }
 
@@ -20,6 +21,8 @@ class _ScrapingFormState extends State<ScrapingForm> {
   TextEditingController storeAddressController = TextEditingController();
   TextEditingController picNameController = TextEditingController();
   TextEditingController contactTokoController = TextEditingController();
+  TextEditingController latController = TextEditingController();
+  TextEditingController lngController = TextEditingController();
   PlanType? selectedPlan;
   Province? selectedProvince;
   Kabupaten? selectedKabupaten;
@@ -56,6 +59,40 @@ class _ScrapingFormState extends State<ScrapingForm> {
     }).toList();
   }
 
+  // Future<void> getCurrentLocation() async {
+  //   Location location = Location();
+
+  //   bool _serviceEnabled;
+  //   PermissionStatus _permissionGranted;
+  //   LocationData _locationData;
+
+  //   // Check if location service is enabled
+  //   _serviceEnabled = await location.serviceEnabled();
+  //   if (!_serviceEnabled) {
+  //     _serviceEnabled = await location.requestService();
+  //     if (!_serviceEnabled) {
+  //       return;
+  //     }
+  //   }
+
+  //   // Check for location permissions
+  //   _permissionGranted = await location.hasPermission();
+  //   if (_permissionGranted == PermissionStatus.denied) {
+  //     _permissionGranted = await location.requestPermission();
+  //     if (_permissionGranted != PermissionStatus.granted) {
+  //       return;
+  //     }
+  //   }
+
+  //   // Get the current location
+  //   _locationData = await location.getLocation();
+
+  //   setState(() {
+  //     latController.text = _locationData.latitude.toString();
+  //     lngController.text = _locationData.longitude.toString();
+  //   });
+  // }
+
   Future<void> submitForm() async {
     if (storeNameController.text.isEmpty ||
         picNameController.text.isEmpty ||
@@ -80,6 +117,8 @@ class _ScrapingFormState extends State<ScrapingForm> {
       'address': storeAddressController.text,
       'picName': picNameController.text,
       'contactToko': contactTokoController.text,
+      'latitude': latController.text,
+      'longitude': lngController.text,
       'selectedPlan': selectedPlan.toString(),
       'selectedProvince': selectedProvince?.name,
       'selectedKabupaten': selectedKabupaten?.name,
@@ -105,6 +144,8 @@ class _ScrapingFormState extends State<ScrapingForm> {
       storeNameController.clear();
       picNameController.clear();
       contactTokoController.clear();
+      latController.clear();
+      lngController.clear();
       selectedPlan = null;
       selectedProvince = null;
       selectedKabupaten = null;
@@ -342,26 +383,33 @@ class _ScrapingFormState extends State<ScrapingForm> {
                 ],
               ),
               const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(12.0),
-                decoration: BoxDecoration(
-                  color: Colors.green[100],
-                  borderRadius: BorderRadius.circular(8.0),
+              ElevatedButton(
+                onPressed: () {}, //getCurrentLocation,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: mainColor,
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info, color: Colors.green),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Address and store classification are optional',
-                        style: TextStyle(
-                          color: Colors.green[800],
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Get Current Location',
+                  style: TextStyle(color: Colors.white),
                 ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: latController,
+                decoration: const InputDecoration(
+                  labelText: 'Latitude',
+                  border: OutlineInputBorder(),
+                ),
+                readOnly: true,
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: lngController,
+                decoration: const InputDecoration(
+                  labelText: 'Longitude',
+                  border: OutlineInputBorder(),
+                ),
+                readOnly: true,
               ),
               const SizedBox(height: 20),
               const Text(

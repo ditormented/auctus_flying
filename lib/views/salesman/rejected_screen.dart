@@ -96,15 +96,12 @@ class _RejectedScreenState extends State<RejectedScreen> {
           backgroundColor: Colors.green,
         ),
       );
-
       // Navigasi ke HomeScreen
-      Navigator.push(
+      Navigator.pop(
         context,
-        MaterialPageRoute(
-          builder: (context) => MainScreen(
-            ID: widget.userID, // Adjust if needed
-          ),
-        ),
+      );
+      Navigator.pop(
+        context,
       );
     } catch (e) {
       print('Failed to submit form: $e');
