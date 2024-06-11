@@ -1,63 +1,51 @@
 import 'dart:developer';
 import 'package:auctus_call/utilities/colors.dart';
+import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/purchase_document_object.dart';
 import 'package:flutter/material.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PurchaseDocument1Object {
-  final String callID;
-  final List<Map<String, dynamic>> items;
-  final DateTime timestamp;
-  final double total;
-  final String userID;
-
-  PurchaseDocument1Object({
-    required this.callID,
-    required this.items,
-    required this.timestamp,
-    required this.total,
-    required this.userID,
-  });
-}
-
 class StoreOrderHistory extends StatefulWidget {
   final String userID;
-  const StoreOrderHistory({super.key, required this.userID});
+  final List<PurchaseDocumentObject> listPurchase;
+  const StoreOrderHistory(
+      {super.key, required this.userID, required this.listPurchase});
 
   @override
   _StoreOrderHistoryState createState() => _StoreOrderHistoryState();
 }
 
 class _StoreOrderHistoryState extends State<StoreOrderHistory> {
-  List<PurchaseDocument1Object> listPurchase = [];
+  List<PurchaseDocumentObject> listPurchase = [];
 
   Future<void> collectAllPurchases() async {
     try {
-      QuerySnapshot purchaseSnapshot = await FirebaseFirestore.instance
-          .collection('purchases')
-          .where('userID', isEqualTo: widget.userID)
-          .get();
+      // QuerySnapshot purchaseSnapshot = await FirebaseFirestore.instance
+      //     .collection('purchases')
+      //     .where('userID', isEqualTo: widget.userID)
+      //     .get();
 
-      List<PurchaseDocument1Object> listPurchaseTemp = [];
-      for (var doc in purchaseSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        Timestamp timestamp = data['timestamp'];
-        DateTime purchaseDate = timestamp.toDate();
+      // List<PurchaseDocumentObject> listPurchaseTemp = [];
+      // for (var doc in purchaseSnapshot.docs) {
+      //   final data = doc.data() as Map<String, dynamic>;
+      //   Timestamp timestamp = data['timestamp'];
+      //   DateTime purchaseDate = timestamp.toDate();
 
-        listPurchaseTemp.add(
-          PurchaseDocument1Object(
-            callID: data['callID'] ?? '',
-            items: List<Map<String, dynamic>>.from(data['items'] ?? []),
-            timestamp: purchaseDate,
-            total: data['total'] ?? 0.0,
-            userID: data['userID'] ?? '',
-          ),
-        );
-      }
-
+      //   listPurchaseTemp.add(
+      //     PurchaseDocumentObject(
+      //       callID: data['callID'] ?? '',
+      //       items: List<Map<String, dynamic>>.from(data['items'] ?? []),
+      //       timestamp: purchaseDate,
+      //       total: data['total'] ?? 0.0,
+      //       userID: data['userID'] ?? '',
+      //       caption: '',
+      //     ),
+      //   );
+      // }
+      log('jumlah list Purchase${widget.listPurchase.length}');
       setState(() {
-        listPurchase = listPurchaseTemp;
+        listPurchase = widget.listPurchase;
       });
     } catch (e) {
       print('Error fetching purchase history: $e');
