@@ -47,9 +47,11 @@ class _StoreProfileState extends State<StoreProfile> {
           preferredCameraDevice: CameraDevice.rear);
 
       if (file != null) {
-        imagePhotoTokoX = file;
-        storeObject.latitude = position.latitude;
-        storeObject.longitude = position.longitude;
+        setState(() {
+          imagePhotoTokoX = file;
+          storeObject.latitude = position.latitude;
+          storeObject.longitude = position.longitude;
+        });
 
         // Get reverse geotagging
         try {
@@ -73,8 +75,10 @@ class _StoreProfileState extends State<StoreProfile> {
             String country = placemark.country ?? "";
             log("country: $country");
 
-            storeObject.reverseGeotagging =
-                "$street, $subLocality, $locality, $administrativeArea, $country";
+            setState(() {
+              storeObject.reverseGeotagging =
+                  "$street, $subLocality, $locality, $administrativeArea, $country";
+            });
             log("Reverse geolocation: ${storeObject.reverseGeotagging}");
           }
         } catch (e) {
@@ -119,6 +123,39 @@ class _StoreProfileState extends State<StoreProfile> {
 
   List<PurchaseDocumentObject> listPurchase = [];
   List<CallDocumentObject> listCall = [];
+
+  Future<void> getStoreDetail() async {
+    CollectionReference stores =
+        FirebaseFirestore.instance.collection('stores');
+    var storeDoc = await stores.doc(widget.storeObject.storeId).get();
+
+    if (storeDoc.exists) {
+      var data = storeDoc.data() as Map<String, dynamic>;
+
+      setState(() {
+        storeObject = StoreObject(
+          storeId: widget.storeObject.storeId,
+          address: data['address'] ?? '',
+          contactToko: data['contactToko'] ?? '',
+          email: data['email'] ?? '',
+          name: data['name'] ?? '',
+          picName: data['picName'] ?? '',
+          selectedCategory: data['selectedCategory'] ?? '',
+          selectedKabupaten: data['selectedKabupaten'] ?? '',
+          selectedPlan: data['selectedPlan'] ?? '',
+          selectedProvince: data['selectedProvince'] ?? '',
+          status: data['status'] ?? '',
+          storeName: data['storeName'] ?? '',
+          visitDate: DateTime.now(), // Jika visitDate tidak ada di data
+          latitude: data['latitude'] ?? 0.0,
+          longitude: data['longitude'] ?? 0.0,
+          storeImageUrl: data['storeImageUrl'] ?? '',
+          reverseGeotagging: data['reverseGeotagging'] ?? '',
+        );
+      });
+      collectAllCall();
+    }
+  }
 
   Future collectAllCall() async {
     log('storeObject.storeId ${storeObject.storeId}');
@@ -230,8 +267,7 @@ class _StoreProfileState extends State<StoreProfile> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    storeObject = widget.storeObject;
-    collectAllCall();
+    getStoreDetail();
   }
 
   @override
@@ -294,7 +330,7 @@ class _StoreProfileState extends State<StoreProfile> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Tanggal Bergabung : ${DateFormat('d MMM yyyy').format(storeObject.visitDate)}',
+                      'Join Date : ${DateFormat('d MMM yyyy').format(storeObject.visitDate)}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -302,7 +338,7 @@ class _StoreProfileState extends State<StoreProfile> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'No.Telp : ${storeObject.contactToko}',
+                      'Phone : ${storeObject.contactToko}',
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -402,23 +438,30 @@ class _StoreProfileState extends State<StoreProfile> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      storeObject.storeImageUrl.isNotEmpty
-                          ? Image.network(
-                              storeObject.storeImageUrl,
+                      imagePhotoTokoX == null
+                          ? storeObject.storeImageUrl.isNotEmpty
+                              ? Image.network(
+                                  storeObject.storeImageUrl,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: 200,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                    Icons.error,
+                                    size: 100,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.image,
+                                  size: 100,
+                                  color: Colors.white,
+                                )
+                          : Image.file(
+                              File(imagePhotoTokoX!.path),
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: 200,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
-                                Icons.error,
-                                size: 100,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.image,
-                              size: 100,
-                              color: Colors.white,
                             ),
                       const SizedBox(height: 32),
                       ElevatedButton.icon(
@@ -486,7 +529,7 @@ class _StoreProfileState extends State<StoreProfile> {
                             ),
                             Text(
                               storeObject.reverseGeotagging,
-                              textAlign: TextAlign.center,
+                              textAlign: TextAlign.start,
                               style: const TextStyle(
                                 color: Colors.blue,
                                 fontSize: 16,
@@ -571,7 +614,7 @@ class _StoreProfileState extends State<StoreProfile> {
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.blue,
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -212,7 +212,7 @@ class _StoreListState extends State<StoreList> {
           ),
         ),
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(32),
+          preferredSize: const Size.fromHeight(32),
           child: Row(
             children: [
               Padding(
@@ -230,166 +230,170 @@ class _StoreListState extends State<StoreList> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: filteredStore.isEmpty
-                        ? const Center(child: Text('No stores found'))
-                        : ListView.builder(
-                            itemCount: _getPaginatedStores().length,
-                            itemBuilder: (context, index) {
-                              final store = _getPaginatedStores()[index];
-                              return Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                // margin: const EdgeInsets.all(8.0),
-                                elevation: 5,
-                                child: ListTile(
-                                  // contentPadding: const EdgeInsets.all(16.0),
-                                  tileColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  title: Text(
-                                    store.storeName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: mainColor,
-                                      fontSize: 18,
+      body: Stack(
+        children: [
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: filteredStore.isEmpty
+                            ? const Center(child: Text('No stores found'))
+                            : ListView.builder(
+                                itemCount: _getPaginatedStores().length,
+                                itemBuilder: (context, index) {
+                                  final store = _getPaginatedStores()[index];
+                                  return Card(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
-                                  ),
-                                  subtitle: Text(
-                                    store.email,
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(8.0),
-                                    decoration: BoxDecoration(
-                                      color: mainColor.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(15.0),
-                                    ),
-                                    child: const Icon(Icons.store,
-                                        color: mainColor, size: 30),
-                                  ),
-                                  trailing: const Icon(Icons.arrow_forward_ios,
-                                      color: mainColor),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => StoreProfile(
-                                          storeObject: store,
-                                          userID: widget.userID,
+                                    elevation: 1,
+                                    child: ListTile(
+                                      tileColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      title: Text(
+                                        store.storeName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: mainColor,
+                                          fontSize: 18,
                                         ),
                                       ),
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-                          ),
+                                      subtitle: Text(
+                                        store.email,
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        decoration: BoxDecoration(
+                                          color: mainColor.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(15.0),
+                                        ),
+                                        child: const Icon(Icons.store,
+                                            color: mainColor, size: 30),
+                                      ),
+                                      trailing: const Icon(
+                                          Icons.arrow_forward_ios,
+                                          color: mainColor),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => StoreProfile(
+                                              storeObject: store,
+                                              userID: widget.userID,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                      const SizedBox(
+                          height: 50), // Space for the floating widget
+                    ],
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Center(
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                      // First Page Button
+                      GestureDetector(
+                        onTap: _firstPage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFC8CEF7),
+                              borderRadius: BorderRadius.circular(24)),
+                          child: const Icon(
+                            Icons.first_page,
+                            color: Colors.white,
+                          ),
                         ),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // First Page Button
-                              GestureDetector(
-                                onTap: _firstPage,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                      color: const Color(0xFFC8CEF7),
-                                      borderRadius: BorderRadius.circular(24)),
-                                  child: const Icon(
-                                    Icons.first_page,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              // Prev Page Button
-                              GestureDetector(
-                                onTap: _prevPage,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                      color: mainColor,
-                                      borderRadius: BorderRadius.circular(24)),
-                                  child: const Icon(
-                                    Icons.chevron_left,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text("$currentPage",
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                              const Text(" / ",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              Text("$totalPages",
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                              const SizedBox(width: 8),
-                              // Next Page Button
-                              GestureDetector(
-                                onTap: _nextPage,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                      color: mainColor,
-                                      borderRadius: BorderRadius.circular(24)),
-                                  child: const Icon(
-                                    Icons.chevron_right,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              // Last page Button
-                              const SizedBox(width: 4),
-                              GestureDetector(
-                                onTap: _lastPage,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                      color: const Color(0xFFC8CEF7),
-                                      borderRadius: BorderRadius.circular(24)),
-                                  child: const Icon(
-                                    Icons.last_page,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
+                      ),
+                      const SizedBox(width: 4),
+                      // Prev Page Button
+                      GestureDetector(
+                        onTap: _prevPage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                              color: mainColor,
+                              borderRadius: BorderRadius.circular(24)),
+                          child: const Icon(
+                            Icons.chevron_left,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text("$currentPage",
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(" / ",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text("$totalPages",
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 8),
+                      // Next Page Button
+                      GestureDetector(
+                        onTap: _nextPage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                              color: mainColor,
+                              borderRadius: BorderRadius.circular(24)),
+                          child: const Icon(
+                            Icons.chevron_right,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      // Last page Button
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: _lastPage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFC8CEF7),
+                              borderRadius: BorderRadius.circular(24)),
+                          child: const Icon(
+                            Icons.last_page,
+                            color: Colors.white,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                ],
+                ),
               ),
             ),
+          ),
+        ],
+      ),
     );
   }
 }
