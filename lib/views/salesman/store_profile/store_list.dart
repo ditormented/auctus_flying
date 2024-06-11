@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_profile.dart';
@@ -45,7 +47,7 @@ class _StoreListState extends State<StoreList> {
 
       if (userDoc.exists) {
         _userEmail = userDoc['email'];
-
+        log("userDoc.exist");
         fetchStores();
       } else {
         setState(() {
@@ -63,69 +65,70 @@ class _StoreListState extends State<StoreList> {
     try {
       QuerySnapshot storeDocs =
           await stores.where("email", isEqualTo: _userEmail).get();
+      log("storeDocs.docs.length ${storeDocs.docs.length}");
 
+      listStore = storeDocs.docs
+          .map(
+            (doc) {
+              final data = doc.data() as Map<String, dynamic>?;
+              log("Processing doc id: ${doc.id}");
+
+              if (data == null) {
+                log("Data is null for doc id: ${doc.id}");
+                return null;
+              }
+
+              Timestamp? docTimestamp = data['timestamp'] as Timestamp?;
+              DateTime? visitDate = docTimestamp?.toDate();
+
+              double latitude = 0.0;
+              double longitude = 0.0;
+
+              try {
+                latitude = data['latitude'] is String
+                    ? double.parse(data['latitude'])
+                    : data['latitude'] ?? 0.0;
+                longitude = data['longitude'] is String
+                    ? double.parse(data['longitude'])
+                    : data['longitude'] ?? 0.0;
+              } catch (e) {
+                log("Error parsing latitude or longitude: $e");
+              }
+
+              return StoreObject(
+                storeId: doc.id,
+                address: data['address'] ?? '',
+                contactToko: data['contactToko'] ?? '',
+                email: data['email'] ?? '',
+                name: data['name'] ?? '',
+                picName: data['picName'] ?? '',
+                selectedCategory: data['selectedCategory'] ?? '',
+                selectedKabupaten: data['selectedKabupaten'] ?? '',
+                selectedPlan: data['selectedPlan'] ?? '',
+                selectedProvince: data['selectedProvince'] ?? '',
+                status: data['status'] ?? '',
+                storeName: data['storeName'] ?? '',
+                visitDate: visitDate ?? DateTime.now(),
+                latitude: latitude,
+                longitude: longitude,
+                storeImageUrl: data['storeImageUrl'] ?? '',
+                reverseGeotagging: data['reverseGeotagging'] ?? '',
+              );
+            },
+          )
+          .where((store) => store != null)
+          .toList()
+          .cast<StoreObject>();
+
+      log("Mapped listStore length: ${listStore.length}");
       setState(() {
-        listStore = storeDocs.docs.map(
-          (doc) {
-            final data = doc.data()
-                as Map<String, dynamic>?; // Cast to Map<String, dynamic>?
-            Timestamp? docTimestamp = data?.containsKey('timestamp') == true
-                ? data!['timestamp'] as Timestamp?
-                : null;
-            DateTime? visitDate = docTimestamp?.toDate();
-
-            return StoreObject(
-              storeId: doc.id,
-              address: data?.containsKey('address') == true
-                  ? data!['address'] ?? ''
-                  : '',
-              contactToko: data?.containsKey('contactToko') == true
-                  ? data!['contactToko'] ?? ''
-                  : '',
-              email: data?.containsKey('email') == true
-                  ? data!['email'] ?? ''
-                  : '',
-              name:
-                  data?.containsKey('name') == true ? data!['name'] ?? '' : '',
-              picName: data?.containsKey('picName') == true
-                  ? data!['picName'] ?? ''
-                  : '',
-              selectedCategory: data?.containsKey('selectedCategory') == true
-                  ? data!['selectedCategory'] ?? ''
-                  : '',
-              selectedKabupaten: data?.containsKey('selectedKabupaten') == true
-                  ? data!['selectedKabupaten'] ?? ''
-                  : '',
-              selectedPlan: data?.containsKey('selectedPlan') == true
-                  ? data!['selectedPlan'] ?? ''
-                  : '',
-              selectedProvince: data?.containsKey('selectedProvince') == true
-                  ? data!['selectedProvince'] ?? ''
-                  : '',
-              status: data?.containsKey('status') == true
-                  ? data!['status'] ?? ''
-                  : '',
-              storeName: data?.containsKey('storeName') == true
-                  ? data!['storeName'] ?? ''
-                  : '',
-              visitDate: visitDate ?? DateTime.now(),
-              latitude: data?.containsKey('latitude') == true
-                  ? data!['latitude']
-                  : 0.0,
-              longitude: data?.containsKey('longitude') == true
-                  ? data!['longitude']
-                  : 0.0,
-              storeImageUrl: data?.containsKey('storeImageUrl') == true
-                  ? data!['storeImageUrl']
-                  : '',
-            );
-          },
-        ).toList();
         filteredStore = listStore;
         totalPages = (listStore.length / itemsPerPage).ceil();
         isLoading = false;
       });
+      log("aku sudah disini...");
     } catch (e) {
+      log("Error in fetchStores: $e");
       setState(() {
         isLoading = false;
       });

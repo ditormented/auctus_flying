@@ -69,8 +69,8 @@ class _ListCallState extends State<ListCall> {
           (doc) {
             final data = doc.data()
                 as Map<String, dynamic>?; // Cast to Map<String, dynamic>?
-            Timestamp? docTimestamp = data?.containsKey('visitDate') == true
-                ? data!['visitDate'] as Timestamp?
+            Timestamp? docTimestamp = data?.containsKey('timestamp') == true
+                ? data!['timestamp'] as Timestamp?
                 : null;
             DateTime? visitDate = docTimestamp?.toDate();
 
@@ -117,6 +117,9 @@ class _ListCallState extends State<ListCall> {
                   : 0.0,
               storeImageUrl: data?.containsKey('storeImageUrl') == true
                   ? data!['storeImageUrl'] ?? ''
+                  : '',
+              reverseGeotagging: data?.containsKey('reverseGeotagging') == true
+                  ? data!['reverseGeotagging']
                   : '',
             );
           },
