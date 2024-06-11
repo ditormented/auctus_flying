@@ -1,7 +1,6 @@
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/main_screen.dart';
 import 'package:auctus_call/views/salesman/sign_up.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -31,8 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
+    // double screenHeight = MediaQuery.of(context).size.height;
+    // double screenWidth = MediaQuery.of(context).size.width;
 
     return ScaffoldMessenger(
       key: _scaffoldMessengerKey,
@@ -48,28 +47,28 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
                         // Image.asset(
-                        //   'images/auctuslogo.png',
+                        //   'images/auctus_logo.png',
                         //   width: 100,
                         //   height: 100,
                         // ),
-                        const Text(
+                        Text(
                           'Sign In',
                           style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                               color: mainColor),
                         ),
-                        const SizedBox(width: 15),
-                        const Icon(Icons.airplane_ticket_outlined),
+                        SizedBox(width: 15),
+                        Icon(Icons.airplane_ticket_outlined),
                       ],
                     ),
                     const SizedBox(height: 32),
                     const SizedBox(height: 16),
                     SizedBox(
-                      width: screenWidth * 0.85,
+                      // width: screenWidth * 0.85,
                       child: TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
@@ -96,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
-                      width: screenWidth * 0.85,
+                      // width: screenWidth * 0.85,
                       child: TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
@@ -159,7 +158,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 setState(() {
                                   isLoading = true;
                                 });
-
                                 String email = _emailController.text;
                                 String password = _passwordController.text;
 
@@ -170,13 +168,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     email: email,
                                     password: password,
                                   );
-
                                   String userId =
                                       userCredential.user?.uid ?? '';
-
                                   MyMessage.showSnackBar(
                                       _scaffoldMessengerKey, 'Signing In...');
-
                                   setState(() {
                                     _emailController.clear();
                                     _passwordController.clear();

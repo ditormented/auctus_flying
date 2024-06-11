@@ -21,28 +21,6 @@ class _StoreOrderHistoryState extends State<StoreOrderHistory> {
 
   Future<void> collectAllPurchases() async {
     try {
-      // QuerySnapshot purchaseSnapshot = await FirebaseFirestore.instance
-      //     .collection('purchases')
-      //     .where('userID', isEqualTo: widget.userID)
-      //     .get();
-
-      // List<PurchaseDocumentObject> listPurchaseTemp = [];
-      // for (var doc in purchaseSnapshot.docs) {
-      //   final data = doc.data() as Map<String, dynamic>;
-      //   Timestamp timestamp = data['timestamp'];
-      //   DateTime purchaseDate = timestamp.toDate();
-
-      //   listPurchaseTemp.add(
-      //     PurchaseDocumentObject(
-      //       callID: data['callID'] ?? '',
-      //       items: List<Map<String, dynamic>>.from(data['items'] ?? []),
-      //       timestamp: purchaseDate,
-      //       total: data['total'] ?? 0.0,
-      //       userID: data['userID'] ?? '',
-      //       caption: '',
-      //     ),
-      //   );
-      // }
       log('jumlah list Purchase${widget.listPurchase.length}');
       setState(() {
         listPurchase = widget.listPurchase;
@@ -103,44 +81,131 @@ class _StoreOrderHistoryState extends State<StoreOrderHistory> {
       indicatorStyle: IndicatorStyle(
         width: 20,
         color: isFirst || isLast ? Colors.purple : Colors.teal,
-        padding: EdgeInsets.all(6),
+        padding: const EdgeInsets.all(6),
       ),
-      endChild: Container(
-        constraints: BoxConstraints(minHeight: 80),
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      endChild: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ExpansionTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          backgroundColor: mainColor,
+          textColor: Colors.white,
+          dense: true,
+          title: Text(
+            "$formattedDate, $formattedTime",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          subtitle: Text(
+            "Total: Rp.${total.round()}",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
           children: [
-            Text(
-              formattedTime,
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              formattedDate,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Total: \Rp.${total.toStringAsFixed(2)}',
-              style: TextStyle(color: Colors.grey),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Items:',
-              style: TextStyle(color: Colors.grey),
-            ),
-            for (var item in items)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Text(
-                  '- ${item['Name']}',
-                  style: TextStyle(color: Colors.black),
-                ),
+            Container(
+              padding:
+                  const EdgeInsets.only(top: 8, left: 16, right: 16, bottom: 8),
+              color: Colors.white.withOpacity(0.2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      for (var item in items)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(top: 8, right: 8),
+                                child: Icon(Icons.circle,
+                                    size: 8, color: Colors.white),
+                              ),
+                              SizedBox(
+                                width:
+                                    MediaQuery.of(context).size.width * 0.475,
+                                child: Text(
+                                  '${item['Name']}',
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
+                              ),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          "Rp.${item['ppnPrice']}",
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white),
+                                        ),
+                                        Text(
+                                          "Qty: ${item['quantity']}",
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  )
+                ],
               ),
+            ),
           ],
         ),
       ),
-      beforeLineStyle: LineStyle(
+      // Container(
+      //   constraints: const BoxConstraints(minHeight: 80),
+      //   padding: const EdgeInsets.all(16),
+      //   child: Column(
+      //     crossAxisAlignment: CrossAxisAlignment.start,
+      //     children: [
+      //       Text(
+      //         formattedTime,
+      //         style: const TextStyle(fontWeight: FontWeight.bold),
+      //       ),
+      //       const SizedBox(height: 8),
+      //       Text(
+      //         formattedDate,
+      //         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      //       ),
+      //       Text(
+      //         'Total: Rp.${total.toStringAsFixed(2)}',
+      //         style: const TextStyle(color: Colors.grey),
+      //       ),
+      //       const SizedBox(height: 8),
+      //       const Text(
+      //         'Items:',
+      //         style: TextStyle(color: Colors.grey),
+      //       ),
+      //       for (var item in items)
+      //         Padding(
+      //           padding: const EdgeInsets.symmetric(vertical: 4.0),
+      //           child: Text(
+      //             '- ${item['Name']}',
+      //             style: const TextStyle(color: Colors.black),
+      //           ),
+      //         ),
+      //     ],
+      //   ),
+      // ),
+      beforeLineStyle: const LineStyle(
         color: Colors.grey,
         thickness: 2,
       ),
