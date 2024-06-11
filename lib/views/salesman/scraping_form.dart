@@ -2,7 +2,7 @@ import 'package:auctus_call/utilities/categ_list.dart';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-// import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 
 enum PlanType { tiktok, unirama, shopee, tokopedia, offline, others }
 
@@ -59,39 +59,38 @@ class _ScrapingFormState extends State<ScrapingForm> {
     }).toList();
   }
 
-  // Future<void> getCurrentLocation() async {
-  //   Location location = Location();
+  Future<void> getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
 
-  //   bool _serviceEnabled;
-  //   PermissionStatus _permissionGranted;
-  //   LocationData _locationData;
+    // Check if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled, don't continue
+      return Future.error('Location services are disabled.');
+    }
 
-  //   // Check if location service is enabled
-  //   _serviceEnabled = await location.serviceEnabled();
-  //   if (!_serviceEnabled) {
-  //     _serviceEnabled = await location.requestService();
-  //     if (!_serviceEnabled) {
-  //       return;
-  //     }
-  //   }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try requesting permissions again
+        return Future.error('Location permissions are denied');
+      }
+    }
 
-  //   // Check for location permissions
-  //   _permissionGranted = await location.hasPermission();
-  //   if (_permissionGranted == PermissionStatus.denied) {
-  //     _permissionGranted = await location.requestPermission();
-  //     if (_permissionGranted != PermissionStatus.granted) {
-  //       return;
-  //     }
-  //   }
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
 
-  //   // Get the current location
-  //   _locationData = await location.getLocation();
-
-  //   setState(() {
-  //     latController.text = _locationData.latitude.toString();
-  //     lngController.text = _locationData.longitude.toString();
-  //   });
-  // }
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      latController.text = position.latitude.toString();
+      lngController.text = position.longitude.toString();
+    });
+  }
 
   Future<void> submitForm() async {
     if (storeNameController.text.isEmpty ||
@@ -383,12 +382,16 @@ class _ScrapingFormState extends State<ScrapingForm> {
                 ],
               ),
               const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {}, //getCurrentLocation,
+              ElevatedButton.icon(
+                onPressed: getCurrentLocation,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: mainColor,
                 ),
-                child: Text(
+                icon: Icon(
+                  Icons.location_on,
+                  color: Colors.white,
+                ),
+                label: Text(
                   'Get Current Location',
                   style: TextStyle(color: Colors.white),
                 ),

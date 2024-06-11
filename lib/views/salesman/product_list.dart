@@ -135,18 +135,21 @@ class _ProductListState extends State<ProductList>
     );
   }
 
-  final List<String> categories = [
-    'Nivea Sun',
-    'Nivea Men',
-    'Nivea Deodorant',
-    'NCRM Cremes',
-    'Nivea Body',
-    'Nivea Deodorant Men',
-    'Nivea Face Care',
-    'NCL Lip Care'
+  final List<List<String>> categories = [
+    [
+      'Nivea Sun',
+      'Nivea Men',
+      'Nivea Deodorant',
+      'NCRM Cremes',
+      'Nivea Body',
+      'Nivea Deodorant Men',
+      'Nivea Face Care',
+      'NCL Lip Care'
+    ],
+    ['Jolly', 'Nice'],
   ];
   final List<String> brands = ['Beiersdorf', 'PASEO'];
-
+  int selectedIndexBrand = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -194,6 +197,11 @@ class _ProductListState extends State<ProductList>
                 tabs: brands.map((String brand) {
                   return Tab(text: brand);
                 }).toList(),
+                onTap: (value) {
+                  setState(() {
+                    selectedIndexBrand = value;
+                  });
+                },
               ),
             ],
           ),
@@ -212,7 +220,7 @@ class _ProductListState extends State<ProductList>
                   ),
                   unselectedLabelColor: Colors.black,
                   labelColor: Colors.black,
-                  tabs: categories.map((String category) {
+                  tabs: categories[selectedIndexBrand].map((String category) {
                     return Tab(text: category);
                   }).toList(),
                 ),
@@ -224,9 +232,14 @@ class _ProductListState extends State<ProductList>
                           filteredItems.where((item) {
                         return item['brand'] == brand;
                       }).toList();
+                      List<String> brandCategories =
+                          categories[selectedIndexBrand].where((category) {
+                        return brandItems
+                            .any((item) => item['Category'] == category);
+                      }).toList();
                       return TabBarView(
                         controller: _categoryTabController,
-                        children: categories.map((String category) {
+                        children: brandCategories.map((String category) {
                           List<Map<String, dynamic>> categoryItems =
                               brandItems.where((item) {
                             return item['Category'] == category;
