@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/call_document_object.dart';
@@ -10,6 +11,7 @@ import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/s
 import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/store_order_history.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -30,9 +32,7 @@ class StoreProfile extends StatefulWidget {
 class _StoreProfileState extends State<StoreProfile> {
   final ImagePicker _picker = ImagePicker();
   XFile? imagePhotoTokoX;
-  String latitudeObs = "";
-  String longitudeObs = "";
-  String reverseGeolocation = "";
+  late StoreObject storeObject;
 
   Future getPhotoToko() async {
     late Position position;
@@ -48,9 +48,8 @@ class _StoreProfileState extends State<StoreProfile> {
 
       if (file != null) {
         imagePhotoTokoX = file;
-        latitudeObs = position.latitude.toString();
-        longitudeObs = position.longitude.toString();
-        log("latitude: $latitudeObs, longitude: $longitudeObs");
+        storeObject.latitude = position.latitude;
+        storeObject.longitude = position.longitude;
 
         // Get reverse geotagging
         try {
@@ -74,9 +73,9 @@ class _StoreProfileState extends State<StoreProfile> {
             String country = placemark.country ?? "";
             log("country: $country");
 
-            reverseGeolocation =
+            storeObject.reverseGeotagging =
                 "$street, $subLocality, $locality, $administrativeArea, $country";
-            log("Reverse geolocation: $reverseGeolocation");
+            log("Reverse geolocation: ${storeObject.reverseGeotagging}");
           }
         } catch (e) {
           log("Error fetching reverse geotagging: $e");
@@ -88,7 +87,7 @@ class _StoreProfileState extends State<StoreProfile> {
 
         // Update Firestore
         await updateStoreData(storeImageUrl, position.latitude,
-            position.longitude, reverseGeolocation);
+            position.longitude, storeObject.reverseGeotagging);
         log("Store data updated in Firestore.");
       }
     } catch (e) {
@@ -98,19 +97,17 @@ class _StoreProfileState extends State<StoreProfile> {
   }
 
   Future<String> uploadImage(XFile file) async {
-    // Add your cloud storage upload logic here
-    // For example, using Firebase Storage:
-    // final storageRef = FirebaseStorage.instance.ref().child('store_images/${widget.storeObject.storeId}.jpg');
-    // await storageRef.putFile(File(file.path));
-    // return await storageRef.getDownloadURL();
-    return 'https://example.com/your_uploaded_image.jpg';
+    final storageRef = FirebaseStorage.instance.ref().child(
+        'store_images/${widget.storeObject.storeId}${DateTime.now()}.jpg');
+    await storageRef.putFile(File(file.path));
+    return await storageRef.getDownloadURL();
   }
 
   Future updateStoreData(String storeImageUrl, double latitude,
       double longitude, String reverseGeolocation) async {
     DocumentReference storeRef = FirebaseFirestore.instance
         .collection('stores')
-        .doc(widget.storeObject.storeId);
+        .doc(storeObject.storeId);
 
     await storeRef.update({
       'storeImageUrl': storeImageUrl,
@@ -124,14 +121,14 @@ class _StoreProfileState extends State<StoreProfile> {
   List<CallDocumentObject> listCall = [];
 
   Future collectAllCall() async {
-    log('widget.storeObject.storeId ${widget.storeObject.storeId}');
+    log('storeObject.storeId ${storeObject.storeId}');
 
     List<PurchaseDocumentObject> listPurchase = [];
 
     try {
       QuerySnapshot callsSnapshot = await FirebaseFirestore.instance
           .collection('calls')
-          .where('storeID', isEqualTo: widget.storeObject.storeId)
+          .where('storeID', isEqualTo: storeObject.storeId)
           // .where('callResult', isEqualTo: "purchase")
           .get();
 
@@ -233,6 +230,7 @@ class _StoreProfileState extends State<StoreProfile> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    storeObject = widget.storeObject;
     collectAllCall();
   }
 
@@ -269,7 +267,7 @@ class _StoreProfileState extends State<StoreProfile> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.storeObject.storeName,
+                              storeObject.storeName,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -296,7 +294,7 @@ class _StoreProfileState extends State<StoreProfile> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Tanggal Bergabung : ${DateFormat('d MMM yyyy').format(widget.storeObject.visitDate)}',
+                      'Tanggal Bergabung : ${DateFormat('d MMM yyyy').format(storeObject.visitDate)}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -304,7 +302,7 @@ class _StoreProfileState extends State<StoreProfile> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'No.Telp : ${widget.storeObject.contactToko}',
+                      'No.Telp : ${storeObject.contactToko}',
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -400,9 +398,9 @@ class _StoreProfileState extends State<StoreProfile> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      widget.storeObject.storeImageUrl.isNotEmpty
+                      storeObject.storeImageUrl.isNotEmpty
                           ? Image.network(
-                              widget.storeObject.storeImageUrl,
+                              storeObject.storeImageUrl,
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: 200,
@@ -440,15 +438,15 @@ class _StoreProfileState extends State<StoreProfile> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      widget.storeObject.latitude != null &&
-                              widget.storeObject.longitude != null
+                      storeObject.latitude != null &&
+                              storeObject.longitude != null
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 _latLongContainer('Latitude',
-                                    widget.storeObject.latitude.toString()),
+                                    storeObject.latitude.toString()),
                                 _latLongContainer('Longitude',
-                                    widget.storeObject.longitude.toString()),
+                                    storeObject.longitude.toString()),
                               ],
                             )
                           : Container(
@@ -483,7 +481,7 @@ class _StoreProfileState extends State<StoreProfile> {
                                   fontWeight: FontWeight.bold),
                             ),
                             Text(
-                              reverseGeolocation,
+                              storeObject.reverseGeotagging,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.blue,
@@ -500,7 +498,7 @@ class _StoreProfileState extends State<StoreProfile> {
                                   fontWeight: FontWeight.bold),
                             ),
                             Text(
-                              widget.storeObject.address,
+                              storeObject.address,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.blue,

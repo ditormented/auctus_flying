@@ -15,6 +15,8 @@ class StoreObject {
   double latitude;
   double longitude;
   String storeImageUrl;
+  String reverseGeotagging;
+
   StoreObject({
     required this.storeId,
     required this.address,
@@ -32,5 +34,6 @@ class StoreObject {
     required this.latitude,
     required this.longitude,
     required this.storeImageUrl,
+    required this.reverseGeotagging,
   });
 }
