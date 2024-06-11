@@ -1,5 +1,6 @@
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/main_screen.dart';
+import 'package:auctus_call/views/salesman/session.dart';
 import 'package:auctus_call/views/salesman/sign_up.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,12 +15,31 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
       GlobalKey<ScaffoldMessengerState>();
-
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final SessionManager _sessionManager = SessionManager();
   bool passwordVisible = false;
   bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    bool loggedIn = await _sessionManager.isLoggedIn();
+    if (loggedIn) {
+      Map<String, String?> session = await _sessionManager.getUserSession();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainScreen(ID: session["users"]!),
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -30,9 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // double screenHeight = MediaQuery.of(context).size.height;
-    // double screenWidth = MediaQuery.of(context).size.width;
-
     return ScaffoldMessenger(
       key: _scaffoldMessengerKey,
       child: Scaffold(
@@ -49,11 +66,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Row(
                       children: [
-                        // Image.asset(
-                        //   'images/auctus_logo.png',
-                        //   width: 100,
-                        //   height: 100,
-                        // ),
                         Text(
                           'Sign In',
                           style: TextStyle(
@@ -68,7 +80,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 32),
                     const SizedBox(height: 16),
                     SizedBox(
-                      // width: screenWidth * 0.85,
                       child: TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
@@ -95,7 +106,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
-                      // width: screenWidth * 0.85,
                       child: TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
@@ -143,10 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text(
                         'Sign Up dulu deh',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 10,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontSize: 10),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -170,6 +177,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   );
                                   String userId =
                                       userCredential.user?.uid ?? '';
+                                  String token =
+                                      userCredential.user?.refreshToken ?? '';
+                                  await _sessionManager.saveUserSession(
+                                      userId, token);
                                   MyMessage.showSnackBar(
                                       _scaffoldMessengerKey, 'Signing In...');
                                   setState(() {
@@ -178,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     _formKey.currentState?.reset();
                                   });
 
-                                  Navigator.push(
+                                  Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
