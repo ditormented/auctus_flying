@@ -123,8 +123,6 @@ class _StoreProfileState extends State<StoreProfile> {
   Future collectAllCall() async {
     log('storeObject.storeId ${storeObject.storeId}');
 
-    List<PurchaseDocumentObject> listPurchase = [];
-
     try {
       QuerySnapshot callsSnapshot = await FirebaseFirestore.instance
           .collection('calls')
@@ -175,19 +173,21 @@ class _StoreProfileState extends State<StoreProfile> {
             try {
               List<Map<String, dynamic>> items =
                   List<Map<String, dynamic>>.from(purchaseDoc["items"]);
-              listPurchase.add(
-                PurchaseDocumentObject(
-                  callID: purchaseDoc["callID"] ?? '',
-                  items: items,
-                  // timestamp: purchaseDoc["timestamp"].isNotEmpty
-                  //     ? (purchaseDoc["timestamp"] as Timestamp).toDate()
-                  //     : DateTime.now(),
-                  timestamp: (purchaseDoc["timestamp"] as Timestamp).toDate(),
-                  total: purchaseDoc["total"] ?? 0.0,
-                  userID: purchaseDoc["userID"] ?? '',
-                  caption: purchaseDoc["caption"],
-                ),
-              );
+              setState(() {
+                listPurchase.add(
+                  PurchaseDocumentObject(
+                    callID: purchaseDoc["callID"] ?? '',
+                    items: items,
+                    // timestamp: purchaseDoc["timestamp"].isNotEmpty
+                    //     ? (purchaseDoc["timestamp"] as Timestamp).toDate()
+                    //     : DateTime.now(),
+                    timestamp: (purchaseDoc["timestamp"] as Timestamp).toDate(),
+                    total: purchaseDoc["total"] ?? 0.0,
+                    userID: purchaseDoc["userID"] ?? '',
+                    caption: purchaseDoc["caption"],
+                  ),
+                );
+              });
             } catch (e) {
               log("listPurchase.add error => $e");
             }
@@ -369,9 +369,13 @@ class _StoreProfileState extends State<StoreProfile> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _historyButton(EnumSelectHistory.visitHistory),
-                          _historyButton(EnumSelectHistory.orderHistory),
-                          _historyButton(EnumSelectHistory.storeLeague),
+                          _historyButton(
+                              selectHistory: EnumSelectHistory.visitHistory),
+                          _historyButton(
+                              selectHistory: EnumSelectHistory.orderHistory,
+                              list: listPurchase),
+                          _historyButton(
+                              selectHistory: EnumSelectHistory.storeLeague),
                         ],
                       ),
                     ],
@@ -519,7 +523,10 @@ class _StoreProfileState extends State<StoreProfile> {
     );
   }
 
-  Widget _historyButton(EnumSelectHistory selectHistory) {
+  Widget _historyButton(
+      {required EnumSelectHistory selectHistory,
+      List<PurchaseDocumentObject>? list}) {
+    print("_historyButton listPurchase ${listPurchase.length}");
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -534,8 +541,14 @@ class _StoreProfileState extends State<StoreProfile> {
                       //     listCall: listCall, userID: widget.userID)
                       // : const StoreOrderHistory(
                       //     listCall: listCall, userID: widget.userID),
-                      ? StoreOrderHistory(userID: widget.userID)
-                      : StoreOrderHistory(userID: widget.userID),
+                      ? StoreOrderHistory(
+                          userID: widget.userID,
+                          listPurchase: list ?? [],
+                        )
+                      : StoreOrderHistory(
+                          userID: widget.userID,
+                          listPurchase: list ?? [],
+                        ),
             ),
           );
           if (selectHistory == EnumSelectHistory.visitHistory) {
