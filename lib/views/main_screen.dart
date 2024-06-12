@@ -88,7 +88,6 @@ class _MainScreenState extends State<MainScreen> {
       ProductList(userID: widget.ID),
       StoreList(userID: widget.ID),
       ProfileScreen(documentID: widget.ID),
-      FormCall(documentID: widget.ID), // Add the FormCall screen here
     ];
 
     return Scaffold(

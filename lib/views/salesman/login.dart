@@ -32,12 +32,12 @@ class _LoginScreenState extends State<LoginScreen> {
     bool loggedIn = await _sessionManager.isLoggedIn();
     if (loggedIn) {
       Map<String, String?> session = await _sessionManager.getUserSession();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MainScreen(ID: session["users"]!),
-        ),
-      );
+      // Navigator.pushReplacement(
+      //   context,
+      //   // MaterialPageRoute(
+      //   //   builder: (context) => MainScreen(ID: session["users"]),
+      //   // ),
+      // );
     }
   }
 
