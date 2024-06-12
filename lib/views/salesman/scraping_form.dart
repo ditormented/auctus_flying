@@ -1,8 +1,14 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:auctus_call/utilities/categ_list.dart';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 
 enum PlanType { tiktok, unirama, shopee, tokopedia, offline, others }
 
@@ -22,12 +28,108 @@ class _ScrapingFormState extends State<ScrapingForm> {
   TextEditingController picNameController = TextEditingController();
   TextEditingController contactTokoController = TextEditingController();
   TextEditingController latController = TextEditingController();
+  double latNumber = 0.0;
+  double lngNumber = 0.0;
   TextEditingController lngController = TextEditingController();
+  TextEditingController joiningDateController = TextEditingController();
+  TextEditingController phoneNumberController = TextEditingController();
+  TextEditingController addressByGeoReverseController = TextEditingController();
+
+  String reverseGeotaggingString = "";
+
   PlanType? selectedPlan;
   Province? selectedProvince;
   Kabupaten? selectedKabupaten;
   int selectedGridIndex = -1;
   CollectionReference stores = FirebaseFirestore.instance.collection('stores');
+
+  final ImagePicker _picker = ImagePicker();
+  XFile? imagePhotoTokoX;
+
+  Future getPhotoToko() async {
+    late Position position;
+    position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best);
+    try {
+      XFile? file = await _picker.pickImage(
+          source: ImageSource.camera,
+          maxHeight: 1000,
+          maxWidth: 1000,
+          imageQuality: 75,
+          preferredCameraDevice: CameraDevice.rear);
+
+      if (file != null) {
+        setState(() {
+          imagePhotoTokoX = file;
+          latController.text = position.latitude.toString();
+          latNumber = position.latitude;
+          lngController.text = position.longitude.toString();
+          lngNumber = position.longitude;
+        });
+
+        // Get reverse geotagging
+        try {
+          List<Placemark>? placemarks = await placemarkFromCoordinates(
+              position.latitude, position.longitude);
+          if (placemarks.isEmpty) {
+            log("Placemarks list is null or empty.");
+          } else {
+            log("Placemarks: $placemarks");
+
+            Placemark placemark = placemarks.first;
+
+            String street = placemark.street ?? "";
+            log("street: $street");
+            String subLocality = placemark.subLocality ?? "";
+            log("subLocality: $subLocality");
+            String locality = placemark.locality ?? "";
+            log("locality: $locality");
+            String administrativeArea = placemark.administrativeArea ?? "";
+            log("administrativeArea: $administrativeArea");
+            String country = placemark.country ?? "";
+            log("country: $country");
+
+            setState(() {
+              addressByGeoReverseController.text =
+                  "$street, $subLocality, $locality, $administrativeArea, $country";
+            });
+            // log("Reverse geolocation: ${storeObject.reverseGeotagging}");
+          }
+        } catch (e) {
+          log("Error fetching reverse geotagging: $e");
+        }
+
+        // ===> Upload the image to a cloud storage service and get the URL
+        // String storeImageUrl = await uploadImage(file);
+        // log("Uploaded image URL: $storeImageUrl");
+
+        // ===> Update Firestore
+        // await updateStoreData(storeImageUrl, position.latitude,
+        //     position.longitude, reverseGeotaggingString);
+        // log("Store data updated in Firestore.");
+      }
+    } catch (e) {
+      imagePhotoTokoX = null;
+      log("Error in getPhotoToko: $e");
+    }
+  }
+
+  Future<String> uploadImage(XFile file, String storeId) async {
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('store_images/$storeId-${DateTime.now()}.jpg');
+    await storageRef.putFile(File(file.path));
+    return await storageRef.getDownloadURL();
+  }
+
+  Future updateStoreData(String storeImageUrl, String storeId) async {
+    DocumentReference storeRef =
+        FirebaseFirestore.instance.collection('stores').doc(storeId);
+
+    await storeRef.update({
+      'storeImageUrl': storeImageUrl,
+    });
+  }
 
   void fetchUserData() async {
     DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -59,48 +161,50 @@ class _ScrapingFormState extends State<ScrapingForm> {
     }).toList();
   }
 
-  Future<void> getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  // Future<void> getCurrentLocation() async {
+  //   bool serviceEnabled;
+  //   LocationPermission permission;
 
-    // Check if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled, don't continue
-      return Future.error('Location services are disabled.');
-    }
+  //   // Check if location services are enabled.
+  //   serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  //   if (!serviceEnabled) {
+  //     // Location services are not enabled, don't continue
+  //     return Future.error('Location services are disabled.');
+  //   }
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try requesting permissions again
-        return Future.error('Location permissions are denied');
-      }
-    }
+  //   permission = await Geolocator.checkPermission();
+  //   if (permission == LocationPermission.denied) {
+  //     permission = await Geolocator.requestPermission();
+  //     if (permission == LocationPermission.denied) {
+  //       // Permissions are denied, next time you could try requesting permissions again
+  //       return Future.error('Location permissions are denied');
+  //     }
+  //   }
 
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
+  //   if (permission == LocationPermission.deniedForever) {
+  //     // Permissions are denied forever, handle appropriately
+  //     return Future.error(
+  //         'Location permissions are permanently denied, we cannot request permissions.');
+  //   }
 
-    Position position = await Geolocator.getCurrentPosition();
-    setState(() {
-      latController.text = position.latitude.toString();
-      lngController.text = position.longitude.toString();
-    });
-  }
+  //   Position position = await Geolocator.getCurrentPosition();
+  //   setState(() {
+  //     latController.text = position.latitude.toString();
+  //     lngController.text = position.longitude.toString();
+  //   });
+  // }
 
   Future<void> submitForm() async {
     if (storeNameController.text.isEmpty ||
         picNameController.text.isEmpty ||
         contactTokoController.text.isEmpty ||
+        latController.text.isEmpty ||
+        lngController.text.isEmpty ||
         selectedPlan == null ||
         selectedProvince == null ||
         selectedKabupaten == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Please complete all fields'),
           backgroundColor: mainColor,
           duration: Duration(milliseconds: 800),
@@ -116,19 +220,27 @@ class _ScrapingFormState extends State<ScrapingForm> {
       'address': storeAddressController.text,
       'picName': picNameController.text,
       'contactToko': contactTokoController.text,
-      'latitude': latController.text,
-      'longitude': lngController.text,
+      'latitude': latNumber,
+      'longitude': lngNumber,
       'selectedPlan': selectedPlan.toString(),
       'selectedProvince': selectedProvince?.name,
       'selectedKabupaten': selectedKabupaten?.name,
       'selectedCategory':
           selectedGridIndex != -1 ? categoryToko[selectedGridIndex] : null,
+      'reverseGeotagging': addressByGeoReverseController.text,
       'timestamp': FieldValue.serverTimestamp(),
       'status': "scraped",
+    }).then((result) async {
+      updateStoreData(
+        await uploadImage(imagePhotoTokoX!, result.id),
+        result.id,
+      );
+      
     });
 
+    // ignore: use_build_context_synchronously
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Form submitted successfully'),
         backgroundColor: mainColor,
         duration: Duration(
@@ -158,15 +270,14 @@ class _ScrapingFormState extends State<ScrapingForm> {
     double screenWidth = MediaQuery.of(context).size.width;
     double cardWidth = (screenWidth - 32 - 20) / 2;
     double cardHeight = screenHeight * 0.07;
-    late String source;
-    bool _isExpanded = false;
+    String source = "";
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: submitForm,
         backgroundColor: secColor,
-        icon: Icon(Icons.add, color: Colors.white),
-        label: Text(
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
           'NEW SCRAPE',
           style: TextStyle(color: Colors.white),
         ),
@@ -176,7 +287,7 @@ class _ScrapingFormState extends State<ScrapingForm> {
         backgroundColor: mainColor,
         automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -317,6 +428,8 @@ class _ScrapingFormState extends State<ScrapingForm> {
               const SizedBox(height: 15),
               TextField(
                 controller: storeAddressController,
+                minLines: 1,
+                maxLines: null,
                 decoration: const InputDecoration(
                   labelText: 'Address',
                   labelStyle: TextStyle(
@@ -382,38 +495,114 @@ class _ScrapingFormState extends State<ScrapingForm> {
                 ],
               ),
               const SizedBox(height: 10),
-              ElevatedButton.icon(
-                onPressed: getCurrentLocation,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: mainColor,
-                ),
-                icon: Icon(
-                  Icons.location_on,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  'Get Current Location',
-                  style: TextStyle(color: Colors.white),
-                ),
+              // ElevatedButton.icon(
+              //   onPressed: getCurrentLocation,
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: mainColor,
+              //   ),
+              //   icon: const Icon(
+              //     Icons.location_on,
+              //     color: Colors.white,
+              //   ),
+              //   label: const Text(
+              //     'Get Current Location',
+              //     style: TextStyle(color: Colors.white),
+              //   ),
+              // ),
+              // validasi lokasi => start
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  const Row(
+                    children: [
+                      Text(
+                        "Validasi Lokasi",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  imagePhotoTokoX == null
+                      ? const Icon(
+                          Icons.image,
+                          size: 100,
+                          color: Colors.grey,
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(imagePhotoTokoX!.path),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: 200,
+                          ),
+                        ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      getPhotoToko();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: mainColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.location_on,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      'Update data geolocation',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: _textField(EnumForm.latitude),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _textField(EnumForm.longitude),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: addressByGeoReverseController,
+                    minLines: 1,
+                    maxLines: null,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: 'Reverse Geotagging (GPS Address)',
+                      labelStyle: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black,
+                          fontWeight:
+                              FontWeight.bold), // Change the label style
+                      border: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 2.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(width: 2, color: Colors.grey.shade300),
+                      ),
+                    ),
+                    style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black), // Change the input text style
+                  ),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                ],
               ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: latController,
-                decoration: const InputDecoration(
-                  labelText: 'Latitude',
-                  border: OutlineInputBorder(),
-                ),
-                readOnly: true,
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: lngController,
-                decoration: const InputDecoration(
-                  labelText: 'Longitude',
-                  border: OutlineInputBorder(),
-                ),
-                readOnly: true,
-              ),
+              // validasi lokasi => finish
               const SizedBox(height: 20),
               const Text(
                 'Store Classification',
@@ -423,46 +612,44 @@ class _ScrapingFormState extends State<ScrapingForm> {
                 ),
               ),
               const SizedBox(height: 10),
-              Container(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                      children: List.generate(categoryToko.length, (index) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedGridIndex = index;
-                        });
-                      },
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        margin: const EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                            color: selectedGridIndex == index
-                                ? Colors.blue[50]
-                                : Colors.white,
-                            border: Border.all(
-                              color: selectedGridIndex == index
-                                  ? Colors.blue
-                                  : Colors.grey.shade300,
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Center(
-                            child: Text(
-                          categoryToko[index],
-                          style: TextStyle(
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                    children: List.generate(categoryToko.length, (index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedGridIndex = index;
+                      });
+                    },
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                          color: selectedGridIndex == index
+                              ? Colors.blue[50]
+                              : Colors.white,
+                          border: Border.all(
                             color: selectedGridIndex == index
                                 ? Colors.blue
-                                : Colors.black,
-                            fontWeight: FontWeight.bold,
+                                : Colors.grey.shade300,
+                            width: 2,
                           ),
-                        )),
-                      ),
-                    );
-                  })),
-                ),
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Center(
+                          child: Text(
+                        categoryToko[index],
+                        style: TextStyle(
+                          color: selectedGridIndex == index
+                              ? Colors.blue
+                              : Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )),
+                    ),
+                  );
+                })),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -477,7 +664,7 @@ class _ScrapingFormState extends State<ScrapingForm> {
                 controller: picNameController,
                 decoration: const InputDecoration(
                   labelText: 'Name',
-                  hintText: 'John Doe',
+                  hintText: 'Please insert name...',
                   labelStyle: TextStyle(fontSize: 14, color: Colors.black),
                   border: OutlineInputBorder(),
                 ),
@@ -486,20 +673,63 @@ class _ScrapingFormState extends State<ScrapingForm> {
               const SizedBox(height: 15),
               TextField(
                 controller: contactTokoController,
+                keyboardType: const TextInputType.numberWithOptions(),
                 decoration: const InputDecoration(
-                  labelText: 'Contact Toko',
-                  hintText: '+6281031972',
+                  labelText: 'Phone Number',
+                  hintText: 'Please insert contact number...',
                   labelStyle: TextStyle(fontSize: 14, color: Colors.black),
                   border: OutlineInputBorder(),
                 ),
                 style: const TextStyle(fontSize: 14, color: Colors.black),
               ),
+              const SizedBox(height: 60),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _textField(EnumForm enumForm) {
+    return TextField(
+      controller: enumForm == EnumForm.latitude
+          ? latController
+          : enumForm == EnumForm.longitude
+              ? lngController
+              : phoneNumberController,
+      minLines: 1,
+      maxLines: null,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: enumForm == EnumForm.latitude
+            ? 'Latitude'
+            : enumForm == EnumForm.longitude
+                ? 'Longitude'
+                : enumForm == EnumForm.joinDate
+                    ? 'Join date'
+                    : 'Phone number',
+        labelStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.black,
+            fontWeight: FontWeight.bold), // Change the label style
+        border: const OutlineInputBorder(
+          borderSide: BorderSide(width: 2.0),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(width: 2, color: Colors.grey.shade300),
+        ),
+      ),
+      style: const TextStyle(
+          fontSize: 14, color: Colors.black), // Change the input text style
+    );
+  }
+}
+
+enum EnumForm {
+  latitude,
+  longitude,
+  joinDate,
+  phoneNumber,
 }
 
 class PlanCard extends StatelessWidget {
