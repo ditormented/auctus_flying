@@ -1,4 +1,5 @@
 import 'package:auctus_call/utilities/colors.dart';
+import 'package:auctus_call/views/salesman/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -136,8 +137,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           text: 'Logout',
                           color: terColor,
                           onTap: () {
-                            Navigator.pushReplacementNamed(
-                                context, '/welcome_screen');
+                            // Navigator.pushReplacement(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //       builder: (context) => LoginScreen(),
+                            //     ));
                           },
                         ),
                         ProfileActionRow(

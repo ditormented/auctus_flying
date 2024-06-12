@@ -51,7 +51,7 @@ dependencies:
   geocoding: ^3.0.0
   timeline_tile: ^2.0.0
   google_fonts: ^6.2.1
-  # location: ^6.0.2
+  firebase_app_check: ^0.3.0+1
 
 dev_dependencies:
   flutter_test:

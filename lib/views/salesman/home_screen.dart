@@ -1,5 +1,5 @@
 import 'dart:developer';
-
+import 'package:auctus_call/views/salesman/session.dart';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/form_call.dart';
 import 'package:auctus_call/views/salesman/promotion_list.dart';
@@ -24,14 +24,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _userName = '';
   String _userEmail = '';
+  String _userRole = '';
   int _storeCount = 0;
   int _callCount = 0;
   int _ecTotal = 0;
   int _rejectTotal = 0;
   DateTime _selectedDate = DateTime.now();
-
+  final SessionManager _sessionManager = SessionManager();
   void getUserData() async {
     try {
+      Map<String, String?> getUserSession =
+          await _sessionManager.getUserSession();
+      print(getUserSession);
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.documentID)
@@ -41,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _userName = userDoc['name'];
           _userEmail = userDoc['email'];
+          _userRole = userDoc['role'];
         });
         fetchCounts();
       }
@@ -182,6 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
               dynamicFontSize: dynamicFontSize,
               currentDate: currentDate,
               userName: _userName,
+              userRole: _userRole,
             ),
           ),
           SliverList(
@@ -414,6 +420,7 @@ class ProfileHeader extends SliverPersistentHeaderDelegate {
   final double dynamicFontSize;
   final String currentDate;
   final String userName;
+  final String userRole;
 
   ProfileHeader({
     required this.screenWidth,
@@ -421,6 +428,7 @@ class ProfileHeader extends SliverPersistentHeaderDelegate {
     required this.dynamicFontSize,
     required this.currentDate,
     required this.userName,
+    required this.userRole,
   });
 
   @override
@@ -470,8 +478,8 @@ class ProfileHeader extends SliverPersistentHeaderDelegate {
                       color: Colors.white,
                     ),
                   ),
-                  const Text(
-                    'Role',
+                  Text(
+                    userRole,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
