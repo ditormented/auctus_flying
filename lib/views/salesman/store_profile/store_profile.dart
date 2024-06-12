@@ -6,8 +6,8 @@ import 'dart:io';
 
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/call_document_object.dart';
-import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/purchase_document_object.dart';
 import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/store_visit_history.dart';
+import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/purchase_document_object.dart';
 import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/store_order_history.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,6 +34,13 @@ class _StoreProfileState extends State<StoreProfile> {
   XFile? imagePhotoTokoX;
   late StoreObject storeObject;
 
+  TextEditingController addressByGeoReverseController = TextEditingController();
+  TextEditingController addressBySalesmanController = TextEditingController();
+  TextEditingController latitudeController = TextEditingController();
+  TextEditingController longitudeController = TextEditingController();
+  TextEditingController joiningDateController = TextEditingController();
+  TextEditingController phoneNumberController = TextEditingController();
+
   Future getPhotoToko() async {
     late Position position;
     position = await Geolocator.getCurrentPosition(
@@ -49,8 +56,8 @@ class _StoreProfileState extends State<StoreProfile> {
       if (file != null) {
         setState(() {
           imagePhotoTokoX = file;
-          storeObject.latitude = position.latitude;
-          storeObject.longitude = position.longitude;
+          latitudeController.text = position.latitude.toString();
+          longitudeController.text = position.longitude.toString();
         });
 
         // Get reverse geotagging
@@ -76,7 +83,7 @@ class _StoreProfileState extends State<StoreProfile> {
             log("country: $country");
 
             setState(() {
-              storeObject.reverseGeotagging =
+              addressByGeoReverseController.text =
                   "$street, $subLocality, $locality, $administrativeArea, $country";
             });
             log("Reverse geolocation: ${storeObject.reverseGeotagging}");
@@ -102,7 +109,7 @@ class _StoreProfileState extends State<StoreProfile> {
 
   Future<String> uploadImage(XFile file) async {
     final storageRef = FirebaseStorage.instance.ref().child(
-        'store_images/${widget.storeObject.storeId}${DateTime.now()}.jpg');
+        'store_images/${widget.storeObject.storeId}-${DateTime.now()}.jpg');
     await storageRef.putFile(File(file.path));
     return await storageRef.getDownloadURL();
   }
@@ -152,6 +159,15 @@ class _StoreProfileState extends State<StoreProfile> {
           storeImageUrl: data['storeImageUrl'] ?? '',
           reverseGeotagging: data['reverseGeotagging'] ?? '',
         );
+      });
+      setState(() {
+        addressByGeoReverseController.text = storeObject.reverseGeotagging;
+        addressBySalesmanController.text = storeObject.address;
+        latitudeController.text = storeObject.latitude.toString();
+        longitudeController.text = storeObject.longitude.toString();
+        joiningDateController.text =
+            DateFormat('d MMM yyyy').format(storeObject.visitDate);
+        phoneNumberController.text = storeObject.contactToko;
       });
       collectAllCall();
     }
@@ -287,64 +303,40 @@ class _StoreProfileState extends State<StoreProfile> {
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
+                    const CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.blue,
+                      child: Icon(Icons.store, size: 30, color: Colors.white),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.blue,
-                          child:
-                              Icon(Icons.store, size: 30, color: Colors.white),
+                        Text(
+                          storeObject.storeName,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              storeObject.storeName,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: const Text(
+                            'online store',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 12,
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              child: const Text(
-                                'online store',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Join Date : ${DateFormat('d MMM yyyy').format(storeObject.visitDate)}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Phone : ${storeObject.contactToko}',
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
                     ),
                   ],
                 ),
@@ -367,28 +359,30 @@ class _StoreProfileState extends State<StoreProfile> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 16),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8.0),
                         ),
-                        child: Column(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Total Transaksi',
                               style: TextStyle(
-                                  color: Colors.blue,
+                                  color: Colors.grey.shade600,
                                   fontWeight: FontWeight.bold),
                             ),
                             Text(
                               'Rp. $totalPurchases',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                fontSize: 18,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -407,9 +401,11 @@ class _StoreProfileState extends State<StoreProfile> {
                         children: [
                           _historyButton(
                               selectHistory: EnumSelectHistory.visitHistory),
+                          const SizedBox(width: 8),
                           _historyButton(
                               selectHistory: EnumSelectHistory.orderHistory,
                               list: listPurchase),
+                          const SizedBox(width: 8),
                           _historyButton(
                               selectHistory: EnumSelectHistory.storeLeague),
                         ],
@@ -418,29 +414,40 @@ class _StoreProfileState extends State<StoreProfile> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Card(
-                color: mainColor,
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      const Row(
-                        children: [
-                          Text(
-                            "Validasi Lokasi",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      imagePhotoTokoX == null
-                          ? storeObject.storeImageUrl.isNotEmpty
-                              ? Image.network(
+              // validasi lokasi => start
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: _textField(EnumForm.joinDate),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _textField(EnumForm.phoneNumber),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Row(
+                      children: [
+                        Text(
+                          "Validasi Lokasi",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    imagePhotoTokoX == null
+                        ? storeObject.storeImageUrl.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
                                   storeObject.storeImageUrl,
                                   fit: BoxFit.cover,
                                   width: double.infinity,
@@ -451,114 +458,112 @@ class _StoreProfileState extends State<StoreProfile> {
                                     size: 100,
                                     color: Colors.white,
                                   ),
-                                )
-                              : const Icon(
-                                  Icons.image,
-                                  size: 100,
-                                  color: Colors.white,
-                                )
-                          : Image.file(
+                                ),
+                              )
+                            : const Icon(
+                                Icons.image,
+                                size: 100,
+                                color: Colors.grey,
+                              )
+                        : Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Image.file(
                               File(imagePhotoTokoX!.path),
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: 200,
                             ),
-                      const SizedBox(height: 32),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          getPhotoToko();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
                           ),
-                        ),
-                        icon: const Icon(
-                          Icons.gps_fixed_rounded,
-                          color: Colors.white,
-                        ),
-                        label: const Text(
-                          'Update data GPS',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      storeObject.latitude != null &&
-                              storeObject.longitude != null
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _latLongContainer('Latitude',
-                                    storeObject.latitude.toString()),
-                                _latLongContainer('Longitude',
-                                    storeObject.longitude.toString()),
-                              ],
-                            )
-                          : Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16.0),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              child: const Text(
-                                "Latitude / longitude tidak ditemukan!",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                      const SizedBox(height: 16),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Reverse Geotagging (Alamat GPS)',
-                              style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              storeObject.reverseGeotagging,
-                              textAlign: TextAlign.start,
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 16,
-                            ),
-                            const Text(
-                              'Alamat input by Salesman',
-                              style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              storeObject.address,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        getPhotoToko();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: mainColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
                         ),
                       ),
-                    ],
-                  ),
+                      icon: const Icon(
+                        Icons.location_on,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        'Update data geolocation',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: _textField(EnumForm.latitude),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _textField(EnumForm.longitude),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: addressByGeoReverseController,
+                      minLines: 1,
+                      maxLines: null,
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        labelText: 'Reverse Geotagging (GPS Address)',
+                        labelStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black,
+                            fontWeight:
+                                FontWeight.bold), // Change the label style
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(width: 2.0),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(width: 2, color: Colors.grey.shade300),
+                        ),
+                      ),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black), // Change the input text style
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    TextField(
+                      controller: addressBySalesmanController,
+                      minLines: 1,
+                      maxLines: null,
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        labelText: 'Address by salesman',
+                        labelStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black,
+                            fontWeight:
+                                FontWeight.bold), // Change the label style
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(width: 2.0),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(width: 2, color: Colors.grey.shade300),
+                        ),
+                      ),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black), // Change the input text style
+                    ),
+                  ],
                 ),
               ),
+              // validasi lokasi => finish
             ],
           ),
         ),
@@ -566,10 +571,10 @@ class _StoreProfileState extends State<StoreProfile> {
     );
   }
 
-  Widget _historyButton(
-      {required EnumSelectHistory selectHistory,
-      List<PurchaseDocumentObject>? list}) {
-    print("_historyButton listPurchase ${listPurchase.length}");
+  Widget _historyButton({
+    required EnumSelectHistory selectHistory,
+    List<PurchaseDocumentObject>? list,
+  }) {
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -580,10 +585,6 @@ class _StoreProfileState extends State<StoreProfile> {
                       EnumSelectHistory.visitHistory
                   ? StoreVisitHistory(listCall: listCall, userID: widget.userID)
                   : selectHistory == EnumSelectHistory.orderHistory
-                      // ? const StoreOrderHistory(
-                      //     listCall: listCall, userID: widget.userID)
-                      // : const StoreOrderHistory(
-                      //     listCall: listCall, userID: widget.userID),
                       ? StoreOrderHistory(
                           userID: widget.userID,
                           listPurchase: list ?? [],
@@ -598,12 +599,11 @@ class _StoreProfileState extends State<StoreProfile> {
           } else if (selectHistory == EnumSelectHistory.orderHistory) {}
         },
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
+            border: Border.all(width: 3, color: Colors.blue.shade900),
             borderRadius: BorderRadius.circular(8.0),
-            border: Border.all(color: Colors.blue),
           ),
           child: Text(
             selectHistory.name == EnumSelectHistory.visitHistory.name
@@ -613,8 +613,8 @@ class _StoreProfileState extends State<StoreProfile> {
                     : 'Store League',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Colors.blue,
-              fontSize: 16,
+              color: Colors.black,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -623,41 +623,48 @@ class _StoreProfileState extends State<StoreProfile> {
     );
   }
 
-  Widget _latLongContainer(String title, String value) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4.0),
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8.0),
-          border: Border.all(color: Colors.blue),
+  Widget _textField(EnumForm enumForm) {
+    return TextField(
+      controller: enumForm == EnumForm.latitude
+          ? latitudeController
+          : enumForm == EnumForm.longitude
+              ? longitudeController
+              : enumForm == EnumForm.joinDate
+                  ? joiningDateController
+                  : phoneNumberController,
+      minLines: 1,
+      maxLines: null,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: enumForm == EnumForm.latitude
+            ? 'Latitude'
+            : enumForm == EnumForm.longitude
+                ? 'Longitude'
+                : enumForm == EnumForm.joinDate
+                    ? 'Join date'
+                    : 'Phone number',
+        labelStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.black,
+            fontWeight: FontWeight.bold), // Change the label style
+        border: const OutlineInputBorder(
+          borderSide: BorderSide(width: 2.0),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.blue,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.blue,
-                fontSize: 18,
-              ),
-            ),
-          ],
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(width: 2, color: Colors.grey.shade300),
         ),
       ),
+      style: const TextStyle(
+          fontSize: 14, color: Colors.black), // Change the input text style
     );
   }
+}
+
+enum EnumForm {
+  latitude,
+  longitude,
+  joinDate,
+  phoneNumber,
 }
 
 enum EnumSelectHistory {
