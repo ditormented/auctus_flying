@@ -216,8 +216,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     _passwordController.clear();
                                   });
 
-                                  Navigator.pushReplacementNamed(
-                                      context, '/home_screen');
+                                  Navigator.pop(
+                                    context,
+                                  );
                                 } catch (e) {
                                   MyMessage.showSnackBar(
                                       _scaffoldMessengerKey, e.toString());
