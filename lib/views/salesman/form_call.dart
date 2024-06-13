@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:auctus_call/utilities/categ_list.dart';
 import 'package:auctus_call/utilities/colors.dart';
@@ -8,6 +9,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -54,6 +56,83 @@ class _FormCallState extends State<FormCall> {
   StoreObject? selectedStore;
   String? selectedStoreID;
 
+  void dialogGetLatLong(BuildContext context, String storeName,
+      {double lat = 0.0, double long = 0.0}) async {
+    if (lat != 0.0 || long != 0.0) {
+      showDialog(
+        context: (context),
+        builder: (context) {
+          return AlertDialog(
+            title: RichText(
+              text: TextSpan(
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                children: [
+                  const TextSpan(text: 'Data geolocation untuk toko'),
+                  TextSpan(
+                    text: ' $storeName',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const TextSpan(text: ' tidak lengkap!')
+                ],
+              ),
+            ),
+            // Text("Data Geolocation toko tidak lengkap!",
+            //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: Text(
+                "Silahkan lengkapi data Geolocation dengan mengambil foto tampak banner dari depan toko.",
+                style: TextStyle(
+                    color: Colors.grey.shade400, fontWeight: FontWeight.bold),
+              ),
+            ),
+            actions: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text(
+                        "Lain Kali",
+                        style: TextStyle(color: mainColor),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: mainColor,
+                      ),
+                      icon: const Icon(
+                        Icons.location_on,
+                        color: Colors.white,
+                      ),
+                      label: const Text("Lanjut",
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          );
+        },
+      );
+    }
+  }
+
   static Future<String> uploadImage(XFile imageFile) async {
     String fileName = basename(imageFile.name);
     final storage =
@@ -65,6 +144,7 @@ class _FormCallState extends State<FormCall> {
     return snapshot.ref.getDownloadURL();
   }
 
+  String emailString = '';
   void fetchUserData() async {
     DocumentSnapshot userDoc = await FirebaseFirestore.instance
         .collection('users')
@@ -74,23 +154,30 @@ class _FormCallState extends State<FormCall> {
     if (userDoc.exists) {
       setState(() {
         emailController.text = userDoc['email'] ?? '';
+        emailString = userDoc['email'] ?? '';
         nameController.text = userDoc['name'] ?? '';
       });
+      fetchStores();
     }
   }
 
   void fetchStores() async {
-    QuerySnapshot storeDocs = await stores.get();
+    log("emailString => $emailString");
+    QuerySnapshot storeDocs =
+        await stores.where('email', isEqualTo: emailString).get();
     setState(() {
-      listStore = storeDocs.docs
-          .map((doc) =>
-              StoreObject(storeId: doc.id, storeName: doc["storeName"]))
-          .toList();
+      listStore = storeDocs.docs.map((doc) {
+        log('store.email => ${doc['email']}');
+        return StoreObject(storeId: doc.id, storeName: doc["storeName"]);
+      }).toList();
     });
   }
 
-  void fetchStoreDetails(String storeID) async {
+  void fetchStoreDetails(
+      BuildContext context, String storeID, String storeName) async {
     DocumentSnapshot storeDoc = await stores.doc(storeID).get();
+    double latitude = 0.0;
+    double longitude = 0.0;
     if (storeDoc.exists) {
       var storeData = storeDoc.data() as Map<String, dynamic>;
       setState(() {
@@ -104,7 +191,11 @@ class _FormCallState extends State<FormCall> {
         selectedKabupaten = selectedProvince?.kabupatens.firstWhere(
             (kabupaten) => kabupaten.name == storeData['selectedKabupaten'],
             orElse: () => selectedProvince!.kabupatens.first);
+        latitude = storeData['latitude'] ?? '';
+        longitude = storeData['longitude'] ?? '';
       });
+      if (!context.mounted) return;
+      dialogGetLatLong(context, storeName, lat: latitude, long: longitude);
     }
   }
 
@@ -153,7 +244,7 @@ class _FormCallState extends State<FormCall> {
 
     // callID = value.id;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Isi Form Selanjutnya'),
         backgroundColor: mainColor,
       ),
@@ -187,7 +278,7 @@ class _FormCallState extends State<FormCall> {
   void initState() {
     super.initState();
     fetchUserData();
-    fetchStores(); // Fetch the stores when the widget is initialized
+    // Fetch the stores when the widget is initialized
   }
 
   List<DropdownMenuItem<Province>> getProvinceDropdownItems(
@@ -282,7 +373,7 @@ class _FormCallState extends State<FormCall> {
                   },
                 ),
                 hint: Text(
-                  "Pilih tipe customer",
+                  "Pilih customer",
                   style: TextStyle(color: Colors.grey.shade500),
                 ),
                 value: selectedStore,
@@ -290,8 +381,16 @@ class _FormCallState extends State<FormCall> {
                     .map(
                       (e) => DropdownMenuItem<StoreObject>(
                         value: e,
-                        child: Text(
-                          e.storeName,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.7,
+                            child: Text(
+                              e.storeName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
                       ),
                     )
@@ -302,10 +401,14 @@ class _FormCallState extends State<FormCall> {
                   }
                   return null;
                 },
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     selectedStore = value;
-                    fetchStoreDetails(selectedStore!.storeId);
+                    fetchStoreDetails(
+                      context,
+                      selectedStore!.storeId,
+                      selectedStore!.storeName,
+                    );
                   });
                 },
                 buttonStyleData: const ButtonStyleData(
@@ -325,7 +428,7 @@ class _FormCallState extends State<FormCall> {
                   ),
                 ),
                 menuItemStyleData: const MenuItemStyleData(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 4),
                 ),
               ),
               const SizedBox(height: 20),
@@ -419,7 +522,7 @@ class _FormCallState extends State<FormCall> {
                       width: 100,
                       height: 100,
                     )
-                  : SizedBox(),
+                  : const SizedBox(),
               const SizedBox(height: 20),
               const Divider(
                 height: 10,
@@ -573,14 +676,14 @@ class _FormCallState extends State<FormCall> {
                 readOnly: true,
                 decoration: const InputDecoration(
                   labelText: 'Contact Toko',
-                  hintText: '+6281031972',
+                  hintText: 'Please insert contact number...',
                   labelStyle: TextStyle(fontSize: 14, color: Colors.black),
                   border: OutlineInputBorder(),
                 ),
                 style: const TextStyle(fontSize: 14, color: Colors.black),
               ),
               const SizedBox(height: 20),
-              Divider(
+              const Divider(
                 height: 10,
                 thickness: 4,
                 color: mainColor,

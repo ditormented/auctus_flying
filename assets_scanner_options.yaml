@@ -1,0 +1,5 @@
+# assets_scanner_options.yaml
+
+path: "lib/"
+className: "MainAssets"
+ignoreComment: true

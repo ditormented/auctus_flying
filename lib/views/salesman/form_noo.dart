@@ -361,7 +361,7 @@ class _FormNooState extends State<FormNoo> {
               const TextField(
                 decoration: InputDecoration(
                   labelText: 'Contact Toko',
-                  hintText: '+6281031972',
+                  hintText: 'Please insert contact number...',
                   labelStyle: TextStyle(fontSize: 14, color: Colors.black),
                   border: OutlineInputBorder(),
                 ),
