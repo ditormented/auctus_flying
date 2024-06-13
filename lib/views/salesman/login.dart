@@ -31,13 +31,15 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkLoginStatus() async {
     bool loggedIn = await _sessionManager.isLoggedIn();
     if (loggedIn) {
-      Map<String, String?> session = await _sessionManager.getUserSession();
-      // Navigator.pushReplacement(
-      //   context,
-      //   // MaterialPageRoute(
-      //   //   builder: (context) => MainScreen(ID: session["users"]),
-      //   // ),
-      // );
+      String? userId = await _sessionManager.getUserId();
+      if (userId != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MainScreen(ID: userId),
+          ),
+        );
+      }
     }
   }
 
@@ -177,10 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   );
                                   String userId =
                                       userCredential.user?.uid ?? '';
-                                  String token =
-                                      userCredential.user?.refreshToken ?? '';
-                                  await _sessionManager.saveUserSession(
-                                      userId, token);
+                                  await _sessionManager.saveUserSession(userId);
                                   MyMessage.showSnackBar(
                                       _scaffoldMessengerKey, 'Signing In...');
                                   setState(() {

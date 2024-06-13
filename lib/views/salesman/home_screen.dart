@@ -33,9 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final SessionManager _sessionManager = SessionManager();
   void getUserData() async {
     try {
-      Map<String, String?> getUserSession =
-          await _sessionManager.getUserSession();
-      print(getUserSession);
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.documentID)
@@ -266,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => PromotionListScreen(),
+                                    builder: (context) => PromotionList(),
                                   ),
                                 );
                               },

@@ -19,6 +19,7 @@ class _PromotionFormState extends State<PromotionForm> {
   final TextEditingController _periodeController = TextEditingController();
   final TextEditingController _budgetController = TextEditingController();
   bool _isClaim = false;
+  bool _onInvoice = false;
   bool _isLoading = false;
   String? _imageUrl;
   XFile? _image;
@@ -79,6 +80,7 @@ class _PromotionFormState extends State<PromotionForm> {
           'periode': _periodeController.text,
           'budget': _budgetController.text,
           'isClaim': _isClaim,
+          'onInvoice': _onInvoice,
           'bannerURL': _imageUrl,
         });
 
@@ -93,6 +95,7 @@ class _PromotionFormState extends State<PromotionForm> {
           _isLoading = false;
           _image = null;
           _imageUrl = null;
+          _onInvoice = false;
         });
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -165,6 +168,17 @@ class _PromotionFormState extends State<PromotionForm> {
                   onChanged: (bool value) {
                     setState(() {
                       _isClaim = value;
+                    });
+                  },
+                ),
+                SwitchListTile(
+                  title:
+                      Text('On Invoice ?', style: TextStyle(color: mainColor)),
+                  activeColor: mainColor,
+                  value: _onInvoice,
+                  onChanged: (bool value) {
+                    setState(() {
+                      _onInvoice = value;
                     });
                   },
                 ),
