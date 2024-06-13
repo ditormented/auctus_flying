@@ -9,6 +9,9 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
@@ -54,7 +57,7 @@ class _FormCallState extends State<FormCall> {
   List<StoreObject> listStore = [];
 
   StoreObject? selectedStore;
-  String? selectedStoreID;
+  String selectedStoreID = "";
 
   void dialogGetLatLong(BuildContext context, String storeName,
       {double lat = 0.0, double long = 0.0}) async {
@@ -66,9 +69,9 @@ class _FormCallState extends State<FormCall> {
             title: RichText(
               text: TextSpan(
                 style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade500),
                 children: [
                   const TextSpan(text: 'Data geolocation untuk toko'),
                   TextSpan(
@@ -76,7 +79,7 @@ class _FormCallState extends State<FormCall> {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade500,
+                      color: Colors.black,
                     ),
                   ),
                   const TextSpan(text: ' tidak lengkap!')
@@ -103,7 +106,8 @@ class _FormCallState extends State<FormCall> {
                       },
                       child: const Text(
                         "Lain Kali",
-                        style: TextStyle(color: mainColor),
+                        style: TextStyle(
+                            color: mainColor, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -117,11 +121,13 @@ class _FormCallState extends State<FormCall> {
                         backgroundColor: mainColor,
                       ),
                       icon: const Icon(
-                        Icons.location_on,
+                        Icons.camera_alt_rounded,
                         color: Colors.white,
                       ),
                       label: const Text("Lanjut",
-                          style: TextStyle(color: Colors.white)),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -131,6 +137,98 @@ class _FormCallState extends State<FormCall> {
         },
       );
     }
+  }
+
+  Future getPhotoToko() async {
+    ImagePicker _picker = ImagePicker();
+    String geoReverseString = "";
+
+    late Position position;
+    position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best);
+    try {
+      XFile? file = await _picker.pickImage(
+          source: ImageSource.camera,
+          maxHeight: 1000,
+          maxWidth: 1000,
+          imageQuality: 75,
+          preferredCameraDevice: CameraDevice.rear);
+
+      if (file != null) {
+        // Get reverse geotagging
+        try {
+          List<Placemark>? placemarks = await placemarkFromCoordinates(
+              position.latitude, position.longitude);
+          if (placemarks.isEmpty) {
+            log("Placemarks list is null or empty.");
+          } else {
+            log("Placemarks: $placemarks");
+
+            Placemark placemark = placemarks.first;
+
+            String street = placemark.street ?? "";
+            log("street: $street");
+            String subLocality = placemark.subLocality ?? "";
+            log("subLocality: $subLocality");
+            String locality = placemark.locality ?? "";
+            log("locality: $locality");
+            String administrativeArea = placemark.administrativeArea ?? "";
+            log("administrativeArea: $administrativeArea");
+            String country = placemark.country ?? "";
+            log("country: $country");
+
+            geoReverseString =
+                "$street, $subLocality, $locality, $administrativeArea, $country";
+
+            // log("Reverse geolocation: ${storeObject.reverseGeotagging}");
+          }
+        } catch (e) {
+          log("Error fetching reverse geotagging: $e");
+        }
+
+        // ===> Upload the image to a cloud storage service and get the URL
+        String storeImageUrl = await uploadStoreImage(file, selectedStoreID);
+        log("Uploaded image URL: $storeImageUrl");
+
+        // ===> Update Firestore
+        await updateStoreData(
+          storeImageUrl: storeImageUrl,
+          lat: position.latitude,
+          lng: position.longitude,
+          reverseGeotagging: geoReverseString,
+          storeId: selectedStoreID,
+        );
+        log("Store data updated in Firestore.");
+      }
+    } catch (e) {
+      log("Error in getPhotoToko: $e");
+    }
+  }
+
+  Future<String> uploadStoreImage(XFile file, String storeId) async {
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('store_images/$storeId-${DateTime.now()}.jpg');
+    await storageRef.putFile(File(file.path));
+    return await storageRef.getDownloadURL();
+  }
+
+  Future updateStoreData({
+    required String storeImageUrl,
+    required double lat,
+    required double lng,
+    required String reverseGeotagging,
+    required String storeId,
+  }) async {
+    DocumentReference storeRef =
+        FirebaseFirestore.instance.collection('stores').doc(storeId);
+
+    await storeRef.update({
+      'storeImageUrl': storeImageUrl,
+      'latitude': lat,
+      'longitude': lng,
+      'reverseGeotagging': reverseGeotagging,
+    });
   }
 
   static Future<String> uploadImage(XFile imageFile) async {
@@ -499,7 +597,7 @@ class _FormCallState extends State<FormCall> {
                           WidgetStateProperty.all<Color>(Colors.white),
                     ),
                     onPressed: () async {
-                      XFile file = await getImage();
+                      XFile file = await getImageCall();
                       imagePath = file.path;
 
                       setState(() {});
@@ -509,7 +607,7 @@ class _FormCallState extends State<FormCall> {
                       children: [
                         Icon(Icons.camera_alt_outlined),
                         SizedBox(width: 10),
-                        Text('Select Photo'),
+                        Text('Take a photo'),
                       ],
                     ),
                   ),
@@ -742,7 +840,7 @@ class _FormCallState extends State<FormCall> {
   }
 
   XFile? _image;
-  Future<XFile> getImage() async {
+  Future<XFile> getImageCall() async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.camera);
 
