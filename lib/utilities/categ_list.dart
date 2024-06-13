@@ -66,10 +66,10 @@ class Kabupaten {
 }
 
 List<String> categoryToko = [
-  'Small',
-  'Medium',
-  'Large',
-  'Enterprise',
+  'Reseller', //Small
+  'Agent Pro', //Medium
+  'Agent Max', //Large
+  'Agent Turbo', //Enterprise
 ];
 
 class Province {
