@@ -597,6 +597,7 @@ class _StoreProfileState extends State<StoreProfile> {
           } else if (selectHistory == EnumSelectHistory.orderHistory) {}
         },
         child: Container(
+          height: 70,
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -605,7 +606,7 @@ class _StoreProfileState extends State<StoreProfile> {
           ),
           child: Text(
             selectHistory.name == EnumSelectHistory.visitHistory.name
-                ? 'Visit History'
+                ? 'Visit   History'
                 : selectHistory.name == EnumSelectHistory.orderHistory.name
                     ? 'Order History'
                     : 'Store League',

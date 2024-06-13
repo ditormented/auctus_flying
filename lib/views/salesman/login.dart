@@ -1,3 +1,4 @@
+import 'package:auctus_call/r.dart';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/main_screen.dart';
 import 'package:auctus_call/views/salesman/session.dart';
@@ -66,17 +67,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Column(
                       children: [
-                        Text(
-                          'Sign In',
-                          style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: mainColor),
+                        Image.asset(
+                          MainAssets.auctus_logo,
+                          width: 250,
+                          height: 250,
                         ),
-                        SizedBox(width: 15),
-                        Icon(Icons.airplane_ticket_outlined),
+                        const Row(
+                          children: [
+                            Text(
+                              'Sign In',
+                              style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: mainColor),
+                            ),
+                            SizedBox(width: 15),
+                            Icon(Icons.airplane_ticket_outlined),
+                          ],
+                        ),
                       ],
                     ),
                     const SizedBox(height: 32),
