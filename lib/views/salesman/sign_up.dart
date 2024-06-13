@@ -160,9 +160,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 10),
                     InkWell(
                       onTap: () {
-                        Navigator.pushReplacementNamed(
-                            context, '/welcome_screen');
-                        print('Text clicked');
+                        Navigator.pop(
+                          context,
+                        );
                       },
                       child: const Text(
                         'Login Aja Deh',

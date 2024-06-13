@@ -1,5 +1,6 @@
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/login.dart';
+import 'package:auctus_call/views/salesman/session.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -136,12 +137,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           icon: Icons.logout,
                           text: 'Logout',
                           color: terColor,
-                          onTap: () {
-                            // Navigator.pushReplacement(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //       builder: (context) => LoginScreen(),
-                            //     ));
+                          onTap: () async {
+                            final SessionManager sessionManager =
+                                SessionManager();
+                            await sessionManager.clearUserSession();
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => LoginScreen(),
+                              ),
+                            );
                           },
                         ),
                         ProfileActionRow(

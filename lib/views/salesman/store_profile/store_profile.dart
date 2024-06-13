@@ -9,6 +9,7 @@ import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/c
 import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/store_visit_history.dart';
 import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/purchase_document_object.dart';
 import 'package:auctus_call/views/salesman/store_profile/2.store_order_history/store_order_history.dart';
+import 'package:auctus_call/views/salesman/store_profile/store_league.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -589,10 +590,7 @@ class _StoreProfileState extends State<StoreProfile> {
                           userID: widget.userID,
                           listPurchase: list ?? [],
                         )
-                      : StoreOrderHistory(
-                          userID: widget.userID,
-                          listPurchase: list ?? [],
-                        ),
+                      : StoreLeague(),
             ),
           );
           if (selectHistory == EnumSelectHistory.visitHistory) {

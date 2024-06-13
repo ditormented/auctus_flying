@@ -1,14 +1,14 @@
 import 'dart:async';
-
 import 'package:auctus_call/utilities/colors.dart';
-import 'package:auctus_call/views/salesman/form_call.dart';
 import 'package:auctus_call/views/salesman/home_screen.dart';
 import 'package:auctus_call/views/salesman/product_list.dart';
 import 'package:auctus_call/views/salesman/profile_screen.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart'; // Pastikan jalurnya benar
+import 'package:auctus_call/views/salesman/login.dart';
+import 'package:auctus_call/views/salesman/session.dart'; // Pastikan jalurnya benar
 
 class MainScreen extends StatefulWidget {
   final String ID;
@@ -20,31 +20,35 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _pageIndex = 0;
+  Timer? timer;
+  bool isTimerActive = false;
+  bool isLocationServiceCalled = false;
+  bool isCameraServiceCalled = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     init();
   }
 
-  Timer? timer;
-  bool isTimerActive = false;
-  timerPermission() {
+  void init() async {
+    if (!isTimerActive) {
+      timerPermission();
+    }
+  }
+
+  void timerPermission() {
     setState(() {
       isTimerActive = true;
     });
-    timer = Timer.periodic(const Duration(milliseconds: 2000), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 2), (timer) {
       checkLocationService();
       checkCameraService();
-      if (isLocationServiceCalled == true && isCameraServiceCalled == true) {
+      if (isLocationServiceCalled && isCameraServiceCalled) {
         timer.cancel();
       }
     });
   }
-
-  bool isLocationServiceCalled = false;
-  bool isCameraServiceCalled = false;
 
   void checkLocationService() async {
     PermissionStatus locationStatus = await Permission.location.status;
@@ -70,14 +74,8 @@ class _MainScreenState extends State<MainScreen> {
     } else {
       await Permission.camera.request();
       setState(() {
-        isLocationServiceCalled = true;
+        isCameraServiceCalled = true;
       });
-    }
-  }
-
-  init() async {
-    if (isTimerActive = true) {
-      timerPermission();
     }
   }
 
@@ -113,5 +111,11 @@ class _MainScreenState extends State<MainScreen> {
       ),
       body: pages[_pageIndex],
     );
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 }
