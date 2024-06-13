@@ -1,26 +1,10 @@
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/form_inputpromotion.dart';
+import 'package:auctus_call/views/salesman/promotiondetail.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(PromotionList());
-}
-
 class PromotionList extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Promotion List',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: PromotionListScreen(),
-    );
-  }
-}
-
-class PromotionListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,7 +28,10 @@ class PromotionListScreen extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('promotion').snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('promotion')
+            .where('onInvoice', isEqualTo: true)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -63,10 +50,12 @@ class PromotionListScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final promotion = promotions[index];
               return PromotionCard(
+                promotionID: promotion.id,
                 title: promotion['title'],
                 description: promotion['description'],
                 period: promotion['periode'],
                 imageUrl: promotion['bannerURL'] ?? '',
+                isClaim: promotion['isClaim'],
               );
             },
           );
@@ -81,13 +70,17 @@ class PromotionCard extends StatelessWidget {
   final String description;
   final String period;
   final String imageUrl;
+  final bool isClaim;
+  final String promotionID;
 
   const PromotionCard({
     Key? key,
+    required this.promotionID,
     required this.title,
     required this.description,
     required this.period,
     required this.imageUrl,
+    required this.isClaim,
   }) : super(key: key);
 
   @override
@@ -142,6 +135,8 @@ class PromotionCard extends StatelessWidget {
                 SizedBox(height: 10),
                 Text(
                   description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 16),
                 ),
                 SizedBox(height: 10),
@@ -152,7 +147,14 @@ class PromotionCard extends StatelessWidget {
                 SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
-                    // Tambahkan aksi di sini
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PromotionDetail(
+                          promotionID: promotionID,
+                        ),
+                      ),
+                    );
                   },
                   child: Text(
                     'Pelajari Lebih Lanjut',

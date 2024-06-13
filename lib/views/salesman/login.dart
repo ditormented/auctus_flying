@@ -32,13 +32,15 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkLoginStatus() async {
     bool loggedIn = await _sessionManager.isLoggedIn();
     if (loggedIn) {
-      Map<String, String?> session = await _sessionManager.getUserSession();
-      // Navigator.pushReplacement(
-      //   context,
-      //   // MaterialPageRoute(
-      //   //   builder: (context) => MainScreen(ID: session["users"]),
-      //   // ),
-      // );
+      String? userId = await _sessionManager.getUserId();
+      if (userId != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MainScreen(ID: userId),
+          ),
+        );
+      }
     }
   }
 
@@ -219,10 +221,92 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                         ),
-                        child: const Column(
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        obscureText: !passwordVisible,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          } else if (value.length < 7) {
+                            return 'Password must be at least 7 characters long';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SignUpScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Sign Up dulu deh',
+                        style: TextStyle(color: Colors.grey, fontSize: 10),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : ElevatedButton(
+                            onPressed: () async {
+                              if (_formKey.currentState?.validate() ?? false) {
+                                setState(() {
+                                  isLoading = true;
+                                });
+                                String email = _emailController.text;
+                                String password = _passwordController.text;
+
+                                try {
+                                  UserCredential userCredential =
+                                      await FirebaseAuth.instance
+                                          .signInWithEmailAndPassword(
+                                    email: email,
+                                    password: password,
+                                  );
+                                  String userId =
+                                      userCredential.user?.uid ?? '';
+                                  await _sessionManager.saveUserSession(userId);
+                                  MyMessage.showSnackBar(
+                                      _scaffoldMessengerKey, 'Signing In...');
+                                  setState(() {
+                                    _emailController.clear();
+                                    _passwordController.clear();
+                                    _formKey.currentState?.reset();
+                                  });
+
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          MainScreen(ID: userId),
+                                    ),
+                                  );
+                                } on FirebaseAuthException catch (e) {
+                                  MyMessage.showSnackBar(_scaffoldMessengerKey,
+                                      'Failed with error: ${e.message}');
+                                } catch (e) {
+                                  MyMessage.showSnackBar(
+                                      _scaffoldMessengerKey, e.toString());
+                                } finally {
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                }
+                              } else {
+                                MyMessage.showSnackBar(
+                                    _scaffoldMessengerKey, "Validation Failed");
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                            ),
+                            child: const Column(
                               children: [
                                 SizedBox(height: 32),
                                 Text(
