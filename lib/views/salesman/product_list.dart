@@ -35,6 +35,14 @@ class _ProductListState extends State<ProductList>
         TabController(length: categories.length, vsync: this);
   }
 
+  void updateTabController() {
+    setState(() {
+      _brandTabController = TabController(length: brands.length, vsync: this);
+      _categoryTabController = TabController(
+          length: categories[selectedIndexBrand].length, vsync: this);
+    });
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -144,7 +152,7 @@ class _ProductListState extends State<ProductList>
       'Nivea Body',
       'Nivea Deodorant Men',
       'Nivea Face Care',
-      'NCL Lip Care'
+      'NLC Lip Care'
     ],
     ['Jolly', 'Nice'],
   ];
@@ -155,12 +163,7 @@ class _ProductListState extends State<ProductList>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
+        automaticallyImplyLeading: false,
         elevation: 5,
         backgroundColor: mainColor,
         title: Padding(
@@ -200,6 +203,7 @@ class _ProductListState extends State<ProductList>
                 onTap: (value) {
                   setState(() {
                     selectedIndexBrand = value;
+                    updateTabController();
                   });
                 },
               ),
@@ -238,6 +242,7 @@ class _ProductListState extends State<ProductList>
                             .any((item) => item['Category'] == category);
                       }).toList();
                       return TabBarView(
+                        physics: NeverScrollableScrollPhysics(),
                         controller: _categoryTabController,
                         children: brandCategories.map((String category) {
                           List<Map<String, dynamic>> categoryItems =

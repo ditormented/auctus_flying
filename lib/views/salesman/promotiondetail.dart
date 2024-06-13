@@ -17,6 +17,7 @@ class PromotionDetail extends StatefulWidget {
 
 class _PromotionDetailState extends State<PromotionDetail> {
   String title = '';
+  String noPromotion = '';
   String description = '';
   String period = '';
   String imageUrl = '';
@@ -35,18 +36,13 @@ class _PromotionDetailState extends State<PromotionDetail> {
         .doc(widget.promotionID)
         .get();
     setState(() {
+      noPromotion = promotionSnapshot['nopromotion'];
       title = promotionSnapshot['title'];
       description = promotionSnapshot['description'];
       period = promotionSnapshot['periode'];
       imageUrl = promotionSnapshot['bannerURL'];
       isClaim = promotionSnapshot['isClaim'];
     });
-    // final Map<String, dynamic> data =
-    //     promotionSnapshot.data() as Map<String, dynamic>;
-    // final String bannerURL =
-    //     await FirebaseStorage.instance.ref(data['bannerURL']).getDownloadURL();
-
-    // data['bannerURL'] = bannerURL;
   }
 
   @override
@@ -72,11 +68,58 @@ class _PromotionDetailState extends State<PromotionDetail> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              SizedBox(
+                height: 20,
+              ),
+              Row(
+                children: [
+                  Text(
+                    'No Promotion : ',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    noPromotion,
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Row(
+                children: [
+                  Text(
+                    'Periode : ',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    period,
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Text(
+                'Deskripsi : ',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(
+                height: 8,
+              ),
+              Text(
+                description,
+                style: const TextStyle(fontSize: 17),
+              ),
               const SizedBox(height: 16),
-              // Image.network(
-              //   data['bannerURL'],
-              //   fit: BoxFit.cover,
-              // ),
+              Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+              ),
             ],
           ),
         ));

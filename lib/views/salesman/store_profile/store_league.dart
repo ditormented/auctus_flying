@@ -55,7 +55,7 @@ class _StoreLeagueState extends State<StoreLeague> {
             itemBuilder: (context, index) {
               final promotion = promotions[index];
               return LeagueCard(
-                promotionID: promotion['nopromotion'],
+                promotionID: promotion.id,
                 title: promotion['title'],
                 description: promotion['description'],
                 period: promotion['periode'],
