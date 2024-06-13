@@ -1,8 +1,7 @@
 import 'package:auctus_call/utilities/colors.dart';
-import 'package:auctus_call/views/salesman/cart_screen.dart'; // Mengimpor CartScreen
+import 'package:auctus_call/views/salesman/cart_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/widgets.dart';
 
 class MainCatalog extends StatefulWidget {
   final String userID;
@@ -20,12 +19,15 @@ class MainCatalog extends StatefulWidget {
   State<MainCatalog> createState() => _MainCatalogState();
 }
 
-class _MainCatalogState extends State<MainCatalog> {
+class _MainCatalogState extends State<MainCatalog>
+    with TickerProviderStateMixin {
   List<Map<String, dynamic>> items = [];
   List<Map<String, dynamic>> filteredItems = [];
   List<Map<String, dynamic>> cartItems = [];
   late TextEditingController _searchController;
   bool isLoading = true;
+  String selectedBrand = 'Beiersdorf';
+  late TabController _categoryTabController;
 
   @override
   void initState() {
@@ -33,11 +35,14 @@ class _MainCatalogState extends State<MainCatalog> {
     _searchController = TextEditingController();
     _searchController.addListener(_filterItems);
     _fetchItems();
+    _categoryTabController =
+        TabController(length: categories[0].length, vsync: this);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _categoryTabController.dispose();
     super.dispose();
   }
 
@@ -148,9 +153,8 @@ class _MainCatalogState extends State<MainCatalog> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final List<String> categories = [
+  final List<List<String>> categories = [
+    [
       'Nivea Sun',
       'Nivea Men',
       'Nivea Deodorant',
@@ -158,14 +162,19 @@ class _MainCatalogState extends State<MainCatalog> {
       'Nivea Body',
       'Nivea Deodorant Men',
       'Nivea Face Care',
-      'NCL Lip Care'
-    ];
+      'NLC Lip Care'
+    ],
+    ['Jolly', 'Nice'],
+  ];
+  final List<String> brands = ['Beiersdorf', 'PASEO'];
 
+  @override
+  Widget build(BuildContext context) {
     return DefaultTabController(
-      length:
-          categories.length, // Sesuaikan panjang TabBar dengan jumlah kategori
+      length: categories[brands.indexOf(selectedBrand)]
+          .length, // Sesuaikan panjang TabBar dengan jumlah kategori
       child: Scaffold(
-        backgroundColor: mainColor,
+        backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.white),
@@ -176,24 +185,64 @@ class _MainCatalogState extends State<MainCatalog> {
           elevation: 5,
           backgroundColor: mainColor,
           title: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: TextFormField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide.none,
+            padding: const EdgeInsets.symmetric(vertical: 0.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide.none,
+                      ),
+                      fillColor: Colors.white,
+                      filled: true,
+                      prefixIcon: Icon(Icons.search, color: mainColor),
+                      contentPadding: EdgeInsets.symmetric(vertical: 10.0),
+                    ),
+                    style: TextStyle(color: mainColor),
+                  ),
                 ),
-                fillColor: Colors.white,
-                filled: true,
-                prefixIcon: Icon(Icons.search, color: mainColor),
-                contentPadding: EdgeInsets.symmetric(vertical: 10.0),
-              ),
-              style: TextStyle(color: mainColor),
+                SizedBox(width: 8.0),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(25.0),
+                  ),
+                  child: DropdownButton<String>(
+                    value: selectedBrand,
+                    icon: Icon(Icons.arrow_drop_down, color: mainColor),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedBrand = newValue!;
+                        _categoryTabController = TabController(
+                          length:
+                              categories[brands.indexOf(selectedBrand)].length,
+                          vsync: this,
+                        );
+                      });
+                    },
+                    items: brands.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: TextStyle(color: mainColor, fontSize: 13),
+                        ),
+                      );
+                    }).toList(),
+                    underline: SizedBox(), // Remove the underline
+                  ),
+                ),
+              ],
             ),
           ),
           bottom: TabBar(
+            tabAlignment: TabAlignment.start,
+            controller: _categoryTabController,
             isScrollable: true,
             indicator: UnderlineTabIndicator(
               borderSide: BorderSide(color: secColor, width: 4.0),
@@ -201,7 +250,8 @@ class _MainCatalogState extends State<MainCatalog> {
             ),
             unselectedLabelColor: Colors.white,
             labelColor: Colors.white,
-            tabs: categories.map((String category) {
+            tabs: categories[brands.indexOf(selectedBrand)]
+                .map((String category) {
               return Tab(text: category);
             }).toList(),
           ),
@@ -209,10 +259,13 @@ class _MainCatalogState extends State<MainCatalog> {
         body: isLoading
             ? Center(child: CircularProgressIndicator())
             : TabBarView(
-                children: categories.map((String category) {
+                controller: _categoryTabController,
+                children: categories[brands.indexOf(selectedBrand)]
+                    .map((String category) {
                   List<Map<String, dynamic>> categoryItems =
                       filteredItems.where((item) {
-                    return item['Category'] == category;
+                    return item['Category'] == category &&
+                        item['brand'] == selectedBrand;
                   }).toList();
                   return GridView.builder(
                     padding: const EdgeInsets.all(8.0),
