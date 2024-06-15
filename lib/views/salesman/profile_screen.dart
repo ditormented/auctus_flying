@@ -45,12 +45,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (snapshot.connectionState == ConnectionState.done) {
           Map<String, dynamic> data =
               snapshot.data!.data() as Map<String, dynamic>;
-          String id = data['id'] ?? 'N/A';
+          String role = data['role'] ?? 'N/A';
           String name = data['name'] ?? 'N/A';
           String email = data['email'] ?? 'N/A';
-          String dob = data['dob'] ?? 'N/A';
-          String gender = data['gender'] ?? 'N/A';
+          String dob = data['birthday'] ?? 'N/A';
+          String address = data['address'] ?? 'N/A';
           String phone = data['phone'] ?? 'N/A';
+          String? imageUrl = data['imageProfile'];
 
           return Scaffold(
             backgroundColor: mainColor,
@@ -87,10 +88,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     children: [
                       SizedBox(height: screenHeight * 0.1),
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.white,
-                        backgroundImage: AssetImage('images/auctus_logo.png'),
+                        backgroundImage: imageUrl != null
+                            ? NetworkImage(imageUrl)
+                            : const AssetImage('images/auctus_logo.png')
+                                as ImageProvider,
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -126,11 +130,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ProfileDetailRow(
-                            icon: Icons.card_membership_outlined, detail: id),
+                            icon: Icons.card_membership_outlined, detail: role),
                         ProfileDetailRow(icon: Icons.email, detail: email),
                         ProfileDetailRow(
                             icon: Icons.calendar_month, detail: dob),
-                        ProfileDetailRow(icon: Icons.person, detail: gender),
+                        ProfileDetailRow(icon: Icons.person, detail: address),
                         ProfileDetailRow(icon: Icons.phone, detail: phone),
                         const SizedBox(height: 20),
                         ProfileActionRow(
@@ -144,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => LoginScreen(),
+                                builder: (context) => const LoginScreen(),
                               ),
                             );
                           },

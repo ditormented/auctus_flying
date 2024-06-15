@@ -154,10 +154,20 @@ class _ProductListState extends State<ProductList>
       'Nivea Face Care',
       'NLC Lip Care'
     ],
-    ['Jolly', 'Nice'],
+    [
+      'Elegant Facial',
+      'Facial Tissue',
+      'Paseo Royal',
+      'Toilet Core Emboss',
+      'Toilet Core Non Emboss',
+      'Toilet Interfold',
+      'Towel Tissue',
+      'Wipes Tissue'
+    ],
   ];
   final List<String> brands = ['Beiersdorf', 'PASEO'];
   int selectedIndexBrand = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,20 +178,54 @@ class _ProductListState extends State<ProductList>
         backgroundColor: mainColor,
         title: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: TextFormField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25.0),
-                borderSide: BorderSide.none,
+          child: Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    fillColor: Colors.white,
+                    filled: true,
+                    prefixIcon: Icon(Icons.search, color: mainColor),
+                    contentPadding: EdgeInsets.symmetric(vertical: 10.0),
+                  ),
+                  style: TextStyle(color: mainColor),
+                ),
               ),
-              fillColor: Colors.white,
-              filled: true,
-              prefixIcon: Icon(Icons.search, color: mainColor),
-              contentPadding: EdgeInsets.symmetric(vertical: 10.0),
-            ),
-            style: TextStyle(color: mainColor),
+              SizedBox(width: 8.0),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7.0),
+                decoration: BoxDecoration(
+                  color: mainColor,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: DropdownButton<String>(
+                  value: brands[selectedIndexBrand],
+                  icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedIndexBrand = brands.indexOf(newValue!);
+                      updateTabController();
+                    });
+                  },
+                  items: brands.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(
+                        value,
+                        style: TextStyle(color: Colors.white, fontSize: 13),
+                      ),
+                    );
+                  }).toList(),
+                  underline: SizedBox(), // Remove the underline
+                ),
+              ),
+            ],
           ),
         ),
         bottom: PreferredSize(
@@ -189,7 +233,8 @@ class _ProductListState extends State<ProductList>
           child: Column(
             children: [
               TabBar(
-                controller: _brandTabController,
+                tabAlignment: TabAlignment.start,
+                controller: _categoryTabController,
                 isScrollable: true,
                 indicator: UnderlineTabIndicator(
                   borderSide: BorderSide(color: secColor, width: 4.0),
@@ -197,15 +242,9 @@ class _ProductListState extends State<ProductList>
                 ),
                 unselectedLabelColor: Colors.white,
                 labelColor: Colors.white,
-                tabs: brands.map((String brand) {
-                  return Tab(text: brand);
+                tabs: categories[selectedIndexBrand].map((String category) {
+                  return Tab(text: category);
                 }).toList(),
-                onTap: (value) {
-                  setState(() {
-                    selectedIndexBrand = value;
-                    updateTabController();
-                  });
-                },
               ),
             ],
           ),
@@ -213,61 +252,30 @@ class _ProductListState extends State<ProductList>
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                TabBar(
-                  controller: _categoryTabController,
-                  isScrollable: true,
-                  indicator: UnderlineTabIndicator(
-                    borderSide: BorderSide(color: secColor, width: 4.0),
-                    insets: EdgeInsets.symmetric(horizontal: 16.0),
-                  ),
-                  unselectedLabelColor: Colors.black,
-                  labelColor: Colors.black,
-                  tabs: categories[selectedIndexBrand].map((String category) {
-                    return Tab(text: category);
-                  }).toList(),
-                ),
-                Expanded(
-                  child: TabBarView(
-                    controller: _brandTabController,
-                    children: brands.map((String brand) {
-                      List<Map<String, dynamic>> brandItems =
-                          filteredItems.where((item) {
-                        return item['brand'] == brand;
-                      }).toList();
-                      List<String> brandCategories =
-                          categories[selectedIndexBrand].where((category) {
-                        return brandItems
-                            .any((item) => item['Category'] == category);
-                      }).toList();
-                      return TabBarView(
-                        physics: NeverScrollableScrollPhysics(),
-                        controller: _categoryTabController,
-                        children: brandCategories.map((String category) {
-                          List<Map<String, dynamic>> categoryItems =
-                              brandItems.where((item) {
-                            return item['Category'] == category;
-                          }).toList();
-                          return GridView.builder(
-                            padding: const EdgeInsets.all(4.0),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.4, // Adjusted aspect ratio
-                            ),
-                            itemCount: categoryItems.length,
-                            itemBuilder: (context, index) {
-                              final item = categoryItems[index];
-                              return _buildItemCard(item);
-                            },
-                          );
-                        }).toList(),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
+          : Expanded(
+              child: TabBarView(
+                controller: _categoryTabController,
+                children: categories[selectedIndexBrand].map((String category) {
+                  List<Map<String, dynamic>> categoryItems =
+                      filteredItems.where((item) {
+                    return item['Category'] == category &&
+                        item['brand'] == brands[selectedIndexBrand];
+                  }).toList();
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(4.0),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio:
+                          0.6, // Menambah ruang vertikal untuk setiap kartu
+                    ),
+                    itemCount: categoryItems.length,
+                    itemBuilder: (context, index) {
+                      final item = categoryItems[index];
+                      return _buildItemCard(item);
+                    },
+                  );
+                }).toList(),
+              ),
             ),
     );
   }

@@ -9,19 +9,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreenUser extends StatefulWidget {
   final String documentID;
 
-  const HomeScreen({
+  const HomeScreenUser({
     super.key,
     required this.documentID,
   });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreenUser> createState() => _HomeScreenUserState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenUserState extends State<HomeScreenUser> {
   String _userName = '';
   String _userEmail = '';
   String _userRole = '';
