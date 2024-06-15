@@ -1,7 +1,12 @@
+import 'dart:io';
+import 'package:auctus_call/r.dart';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -16,11 +21,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
-  late String name;
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  late String email;
   final TextEditingController _passwordController = TextEditingController();
-  late String password;
+  File? _image;
+  String? _imageUrl;
+  String? _selectedRole;
+  DateTime? _selectedDate;
   bool passwordVisible = false;
   bool isLoading = false;
   CollectionReference users = FirebaseFirestore.instance.collection('users');
@@ -28,9 +36,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    if (_image == null) return;
+
+    final fileName = '${FirebaseAuth.instance.currentUser!.uid}.jpg';
+    final destination = 'user_images/$fileName';
+
+    try {
+      final ref = FirebaseStorage.instance.ref(destination);
+      await ref.putFile(_image!);
+      _imageUrl = await ref.getDownloadURL();
+    } catch (e) {
+      print('Error uploading image: $e');
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (pickedDate != null && pickedDate != _selectedDate) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
   }
 
   @override
@@ -54,11 +104,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   children: [
                     Row(
                       children: [
-                        // Image.asset(
-                        //   'images/auctus_logo.png',
-                        //   width: 100,
-                        //   height: 100,
-                        // ),
+                        Image.asset(
+                          MainAssets.auctus_logo,
+                          width: 80,
+                          height: 80,
+                        ),
                         const Text(
                           'Sign Up',
                           style: TextStyle(
@@ -87,6 +137,54 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your username';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: screenWidth * 0.85,
+                      child: TextFormField(
+                        controller: _phoneController,
+                        decoration: InputDecoration(
+                          labelText: 'Phone Number',
+                          labelStyle:
+                              const TextStyle(color: Colors.grey, fontSize: 12),
+                          focusedBorder: const OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: mainColor, width: 2)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your phone number';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: screenWidth * 0.85,
+                      child: TextFormField(
+                        controller: _addressController,
+                        decoration: InputDecoration(
+                          labelText: 'Address',
+                          labelStyle:
+                              const TextStyle(color: Colors.grey, fontSize: 12),
+                          focusedBorder: const OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: mainColor, width: 2)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Address';
                           }
                           return null;
                         },
@@ -157,6 +255,100 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: screenWidth * 0.85,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8.0),
+                          image: _image != null
+                              ? DecorationImage(
+                                  image: FileImage(_image!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: _image == null
+                            ? Center(
+                                child: Text(
+                                  'Tap to select an image',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: screenWidth * 0.85,
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: 'Role',
+                          labelStyle:
+                              const TextStyle(color: Colors.grey, fontSize: 12),
+                          focusedBorder: const OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: mainColor, width: 2)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        value: _selectedRole,
+                        items: ['Administrator', 'Head Of C2C', 'Salesman']
+                            .map((role) => DropdownMenuItem<String>(
+                                  value: role,
+                                  child: Text(role),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedRole = value;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a role';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: screenWidth * 0.85,
+                      child: GestureDetector(
+                        onTap: () => _selectDate(context),
+                        child: AbsorbPointer(
+                          child: TextFormField(
+                            decoration: InputDecoration(
+                              labelText: _selectedDate == null
+                                  ? 'Select Date of Birth'
+                                  : 'Birthday: ${DateFormat('yyyy-MM-dd').format(_selectedDate!)}',
+                              labelStyle: const TextStyle(
+                                  color: Colors.grey, fontSize: 12),
+                              focusedBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: mainColor, width: 2)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (_selectedDate == null) {
+                                return 'Please select a date of birth';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     InkWell(
                       onTap: () {
@@ -177,13 +369,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
                             onPressed: () async {
-                              if (_formKey.currentState!.validate() ?? false) {
+                              if (_formKey.currentState?.validate() ?? false) {
                                 setState(() {
                                   isLoading = true;
                                 });
-                                email = _emailController.text;
-                                password = _passwordController.text;
-                                name = _nameController.text;
+                                String email = _emailController.text;
+                                String password = _passwordController.text;
+                                String name = _nameController.text;
+                                String phone = _phoneController.text;
+                                String address = _addressController.text;
 
                                 try {
                                   await FirebaseAuth.instance
@@ -191,7 +385,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     email: email,
                                     password: password,
                                   );
-                                  _formKey.currentState!.reset();
+
+                                  await _uploadImage();
+
+                                  _formKey.currentState?.reset();
 
                                   MyMessage.showSnackBar(
                                       _scaffoldMessengerKey, 'Signing Up...');
@@ -204,16 +401,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     'name': name,
                                     'email': email,
                                     'password': password,
-                                    'phone': '',
-                                    'address': '',
+                                    'phone': phone,
+                                    'address': address,
                                     'user_id':
                                         FirebaseAuth.instance.currentUser!.uid,
+                                    'imageProfile': _imageUrl,
+                                    'role': _selectedRole,
+                                    'birthday': _selectedDate != null
+                                        ? DateFormat('yyyy-MM-dd')
+                                            .format(_selectedDate!)
+                                        : null,
                                   });
 
                                   setState(() {
                                     _nameController.clear();
                                     _emailController.clear();
                                     _passwordController.clear();
+                                    _phoneController.clear();
+                                    _addressController.clear();
                                   });
 
                                   Navigator.pop(

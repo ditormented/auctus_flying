@@ -1,8 +1,10 @@
 import 'package:auctus_call/r.dart';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/main_screen.dart';
+import 'package:auctus_call/views/salesman/home_screen_user.dart';
 import 'package:auctus_call/views/salesman/session.dart';
 import 'package:auctus_call/views/salesman/sign_up.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -34,12 +36,21 @@ class _LoginScreenState extends State<LoginScreen> {
     if (loggedIn) {
       String? userId = await _sessionManager.getUserId();
       if (userId != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MainScreen(ID: userId),
-          ),
-        );
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .get();
+        if (userDoc.exists) {
+          String role = userDoc['role'];
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => role == 'Administrator'
+                  ? MainScreen(ID: userId)
+                  : HomeScreenUser(documentID: userId),
+            ),
+          );
+        }
       }
     }
   }
@@ -49,6 +60,59 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        isLoading = true;
+      });
+      try {
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        String userId = userCredential.user?.uid ?? '';
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .get();
+
+        if (userDoc.exists) {
+          String role = userDoc['role'];
+          await _sessionManager.saveUserSession(
+            userId,
+            userDoc['name'],
+            userDoc['address'],
+            userDoc['birthday'],
+            userDoc['imageProfile'],
+            role,
+            _passwordController.text,
+            userDoc['phone'],
+          );
+          MyMessage.showSnackBar(_scaffoldMessengerKey, 'Signing In...');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MainScreen(ID: userId),
+            ),
+          );
+        }
+      } on FirebaseAuthException catch (e) {
+        MyMessage.showSnackBar(
+            _scaffoldMessengerKey, 'Failed with error: ${e.message}');
+      } catch (e) {
+        MyMessage.showSnackBar(_scaffoldMessengerKey, e.toString());
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } else {
+      MyMessage.showSnackBar(_scaffoldMessengerKey, "Validation Failed");
+    }
   }
 
   @override
@@ -172,55 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
-                            onPressed: () async {
-                              if (_formKey.currentState?.validate() ?? false) {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                String email = _emailController.text;
-                                String password = _passwordController.text;
-
-                                try {
-                                  UserCredential userCredential =
-                                      await FirebaseAuth.instance
-                                          .signInWithEmailAndPassword(
-                                    email: email,
-                                    password: password,
-                                  );
-                                  String userId =
-                                      userCredential.user?.uid ?? '';
-                                  await _sessionManager.saveUserSession(userId);
-                                  MyMessage.showSnackBar(
-                                      _scaffoldMessengerKey, 'Signing In...');
-                                  setState(() {
-                                    _emailController.clear();
-                                    _passwordController.clear();
-                                    _formKey.currentState?.reset();
-                                  });
-
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          MainScreen(ID: userId),
-                                    ),
-                                  );
-                                } on FirebaseAuthException catch (e) {
-                                  MyMessage.showSnackBar(_scaffoldMessengerKey,
-                                      'Failed with error: ${e.message}');
-                                } catch (e) {
-                                  MyMessage.showSnackBar(
-                                      _scaffoldMessengerKey, e.toString());
-                                } finally {
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-                                }
-                              } else {
-                                MyMessage.showSnackBar(
-                                    _scaffoldMessengerKey, "Validation Failed");
-                              }
-                            },
+                            onPressed: _login,
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(

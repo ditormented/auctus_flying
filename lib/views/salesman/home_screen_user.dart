@@ -9,19 +9,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreenUser extends StatefulWidget {
   final String documentID;
 
-  const HomeScreen({
+  const HomeScreenUser({
     super.key,
     required this.documentID,
   });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreenUser> createState() => _HomeScreenUserState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenUserState extends State<HomeScreenUser> {
   String _userName = '';
   String _userEmail = '';
   String _userRole = '';
@@ -280,50 +280,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               child: const Text(
                                 'Promotion Info',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PromotionList(),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: mainColor,
-                                minimumSize: const Size(double.infinity, 50),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              child: const Text(
-                                'Sign Up User',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PromotionList(),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: mainColor,
-                                minimumSize: const Size(double.infinity, 50),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              child: const Text(
-                                'Create PJP Salesman',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),

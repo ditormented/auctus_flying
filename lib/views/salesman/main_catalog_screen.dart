@@ -119,7 +119,11 @@ class _MainCatalogState extends State<MainCatalog>
               style: TextStyle(color: Colors.black54, fontSize: 12),
             ),
             Text(
-              'Stock: ${item['quantityCbr']?.toString() ?? 'No stock info'}',
+              'Stock Cibubur : ${item['quantityCbr']?.toString() ?? 'No stock info'}',
+              style: TextStyle(color: Colors.black54, fontSize: 12),
+            ),
+            Text(
+              'Stock Sidoarjo : ${item['quantitySda']?.toString() ?? 'No stock info'}',
               style: TextStyle(color: Colors.black54, fontSize: 12),
             ),
             Spacer(),
@@ -164,7 +168,16 @@ class _MainCatalogState extends State<MainCatalog>
       'Nivea Face Care',
       'NLC Lip Care'
     ],
-    ['Jolly', 'Nice'],
+    [
+      'Elegant Facial',
+      'Facial Tissue',
+      'Paseo Royal',
+      'Toilet Core Emboss',
+      'Toilet Core Non Emboss',
+      'Toilet Interfold',
+      'Towel Tissue',
+      'Wipes Tissue'
+    ],
   ];
   final List<String> brands = ['Beiersdorf', 'PASEO'];
 
