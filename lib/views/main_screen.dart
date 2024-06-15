@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/home_screen.dart';
+import 'package:auctus_call/views/salesman/home_screen_user.dart';
 import 'package:auctus_call/views/salesman/product_list.dart';
 import 'package:auctus_call/views/salesman/profile_screen.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart'; // Pastikan jalurnya benar
-import 'package:auctus_call/views/salesman/login.dart';
-import 'package:auctus_call/views/salesman/session.dart'; // Pastikan jalurnya benar
+import 'package:permission_handler/permission_handler.dart';
+import 'package:auctus_call/views/salesman/session.dart';
 
 class MainScreen extends StatefulWidget {
   final String ID;
@@ -24,6 +24,8 @@ class _MainScreenState extends State<MainScreen> {
   bool isTimerActive = false;
   bool isLocationServiceCalled = false;
   bool isCameraServiceCalled = false;
+  String _userRole = '';
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -32,9 +34,19 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void init() async {
+    await _getUserRole(); // Mendapatkan peran pengguna
     if (!isTimerActive) {
       timerPermission();
     }
+  }
+
+  Future<void> _getUserRole() async {
+    final SessionManager sessionManager = SessionManager();
+    String? role = await sessionManager.getRole();
+    setState(() {
+      _userRole = role ?? '';
+      _isLoading = false;
+    });
   }
 
   void timerPermission() {
@@ -81,12 +93,27 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      HomeScreen(documentID: widget.ID),
-      ProductList(userID: widget.ID),
-      StoreList(userID: widget.ID),
-      ProfileScreen(documentID: widget.ID),
-    ];
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final List<Widget> pages = _userRole == 'Administrator'
+        ? [
+            HomeScreen(documentID: widget.ID),
+            ProductList(userID: widget.ID),
+            StoreList(userID: widget.ID),
+            ProfileScreen(documentID: widget.ID),
+          ]
+        : [
+            HomeScreenUser(documentID: widget.ID),
+            ProductList(userID: widget.ID),
+            StoreList(userID: widget.ID),
+            ProfileScreen(documentID: widget.ID),
+          ];
 
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
