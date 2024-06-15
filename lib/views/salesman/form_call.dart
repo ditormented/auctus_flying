@@ -65,7 +65,7 @@ class _FormCallState extends State<FormCall> {
       showDialog(
         context: (context),
         builder: (context) {
-          return StatefulBuilder(builder: (context, setState) {
+          return StatefulBuilder(builder: (context, setStateBuilder) {
             return AlertDialog(
               title: RichText(
                 text: TextSpan(
@@ -96,7 +96,7 @@ class _FormCallState extends State<FormCall> {
                 ),
               ),
               actions: [
-                !loadingButtonGetPhotoToko
+                loadingButtonGetPhotoToko == false
                     ? Row(
                         children: [
                           Expanded(
@@ -116,13 +116,14 @@ class _FormCallState extends State<FormCall> {
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: () {
+                                setStateBuilder(() {
+                                  loadingButtonGetPhotoToko = true;
+                                });
                                 setState(() {
                                   loadingButtonGetPhotoToko = true;
                                 });
                                 getPhotoToko(context).then((_) {
-                                  setState(() {
-                                    loadingButtonGetPhotoToko = false;
-                                  });
+                                  fetchStores();
                                 });
                               },
                               style: ElevatedButton.styleFrom(
@@ -160,8 +161,6 @@ class _FormCallState extends State<FormCall> {
   }
 
   Future getPhotoToko(BuildContext context) async {
-    tempSelectedStore = selectedStore;
-
     ImagePicker _picker = ImagePicker();
     String geoReverseString = "";
 
@@ -221,7 +220,7 @@ class _FormCallState extends State<FormCall> {
           storeId: selectedStoreID,
         );
         log("Store data updated in Firestore.");
-        fetchStores();
+
         if (context.mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -292,7 +291,8 @@ class _FormCallState extends State<FormCall> {
     }
   }
 
-  void fetchStores() async {
+  Future fetchStores() async {
+    listStore = [];
     log("emailString => $emailString");
     QuerySnapshot storeDocs =
         await stores.where('email', isEqualTo: emailString).get();
@@ -301,6 +301,10 @@ class _FormCallState extends State<FormCall> {
         log('store.email => ${doc['email']}');
         return StoreObject(storeId: doc.id, storeName: doc["storeName"]);
       }).toList();
+    });
+    await Future.delayed(Duration(milliseconds: 150));
+    setState(() {
+      loadingButtonGetPhotoToko = false;
     });
   }
 
@@ -484,7 +488,7 @@ class _FormCallState extends State<FormCall> {
                 ),
               ),
               const SizedBox(height: 10),
-              loadingButtonGetPhotoToko
+              loadingButtonGetPhotoToko == true
                   ? const Center(
                       child: SizedBox(
                           width: 20,
@@ -532,7 +536,9 @@ class _FormCallState extends State<FormCall> {
                         "Pilih customer",
                         style: TextStyle(color: Colors.grey.shade500),
                       ),
-                      value: listStore.isEmpty ? null : selectedStore,
+                      value: listStore.isEmpty || loadingButtonGetPhotoToko
+                          ? null
+                          : selectedStore,
                       items: listStore
                           .map(
                             (e) => DropdownMenuItem<StoreObject>(
@@ -915,5 +921,16 @@ class _FormCallState extends State<FormCall> {
 class StoreObject {
   String storeName;
   String storeId;
+
   StoreObject({required this.storeName, required this.storeId});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StoreObject &&
+          runtimeType == other.runtimeType &&
+          storeId == other.storeId;
+
+  @override
+  int get hashCode => storeId.hashCode;
 }
