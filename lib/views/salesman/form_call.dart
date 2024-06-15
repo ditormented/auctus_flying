@@ -1,21 +1,19 @@
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:auctus_call/utilities/categ_list.dart';
 import 'package:auctus_call/utilities/colors.dart';
-import 'package:auctus_call/views/salesman/cart_screen.dart';
 import 'package:auctus_call/views/salesman/main_catalog_screen.dart';
 import 'package:auctus_call/views/salesman/rejected_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 
 enum PlanType { online, offline }
 
@@ -55,91 +53,115 @@ class _FormCallState extends State<FormCall> {
 
   List<String> storeNames = [];
   List<StoreObject> listStore = [];
-
   StoreObject? selectedStore;
+  StoreObject? tempSelectedStore;
   String selectedStoreID = "";
 
-  void dialogGetLatLong(BuildContext context, String storeName,
+  bool loadingButtonGetPhotoToko = false;
+  void dialogGetLatLong(
+      BuildContext context, String storeName, bool isOfflineStore,
       {double lat = 0.0, double long = 0.0}) async {
-    if (lat != 0.0 || long != 0.0) {
+    if (lat == 0.0 || long == 0.0 && isOfflineStore) {
       showDialog(
         context: (context),
         builder: (context) {
-          return AlertDialog(
-            title: RichText(
-              text: TextSpan(
-                style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade500),
-                children: [
-                  const TextSpan(text: 'Data geolocation untuk toko'),
-                  TextSpan(
-                    text: ' $storeName',
-                    style: GoogleFonts.poppins(
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: RichText(
+                text: TextSpan(
+                  style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Colors.grey.shade500),
+                  children: [
+                    const TextSpan(text: 'Data geolocation untuk toko'),
+                    TextSpan(
+                      text: ' $storeName',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
-                  ),
-                  const TextSpan(text: ' tidak lengkap!')
-                ],
+                    const TextSpan(text: ' tidak lengkap!')
+                  ],
+                ),
               ),
-            ),
-            // Text("Data Geolocation toko tidak lengkap!",
-            //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            content: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              child: Text(
-                "Silahkan lengkapi data Geolocation dengan mengambil foto tampak banner dari depan toko.",
-                style: TextStyle(
-                    color: Colors.grey.shade400, fontWeight: FontWeight.bold),
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Text(
+                  "Silahkan lengkapi data Geolocation dengan mengambil foto tampak banner dari depan toko.",
+                  style: TextStyle(
+                      color: Colors.grey.shade400, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            actions: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text(
-                        "Lain Kali",
-                        style: TextStyle(
-                            color: mainColor, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: mainColor,
-                      ),
-                      icon: const Icon(
-                        Icons.camera_alt_rounded,
-                        color: Colors.white,
-                      ),
-                      label: const Text("Lanjut",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              )
-            ],
-          );
+              actions: [
+                !loadingButtonGetPhotoToko
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text(
+                                "Lain Kali",
+                                style: TextStyle(
+                                    color: mainColor,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  loadingButtonGetPhotoToko = true;
+                                });
+                                getPhotoToko(context).then((_) {
+                                  setState(() {
+                                    loadingButtonGetPhotoToko = false;
+                                  });
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: mainColor,
+                              ),
+                              icon: const Icon(
+                                Icons.camera_alt_rounded,
+                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                "Lanjut",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : const ElevatedButton(
+                        onPressed: null,
+                        child: Center(
+                          child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator()),
+                        ),
+                      )
+              ],
+            );
+          });
         },
       );
     }
   }
 
-  Future getPhotoToko() async {
+  Future getPhotoToko(BuildContext context) async {
+    tempSelectedStore = selectedStore;
+
     ImagePicker _picker = ImagePicker();
     String geoReverseString = "";
 
@@ -199,6 +221,17 @@ class _FormCallState extends State<FormCall> {
           storeId: selectedStoreID,
         );
         log("Store data updated in Firestore.");
+        fetchStores();
+        if (context.mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.green.shade800,
+              content: const Text('Berhasil mengupdate data geolotagging toko',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          );
+        }
       }
     } catch (e) {
       log("Error in getPhotoToko: $e");
@@ -276,6 +309,8 @@ class _FormCallState extends State<FormCall> {
     DocumentSnapshot storeDoc = await stores.doc(storeID).get();
     double latitude = 0.0;
     double longitude = 0.0;
+    String selectedPlan = "";
+    bool isOfflineStore = false;
     if (storeDoc.exists) {
       var storeData = storeDoc.data() as Map<String, dynamic>;
       setState(() {
@@ -289,11 +324,26 @@ class _FormCallState extends State<FormCall> {
         selectedKabupaten = selectedProvince?.kabupatens.firstWhere(
             (kabupaten) => kabupaten.name == storeData['selectedKabupaten'],
             orElse: () => selectedProvince!.kabupatens.first);
-        latitude = storeData['latitude'] ?? '';
-        longitude = storeData['longitude'] ?? '';
+        latitude = storeData['latitude'] is double
+            ? storeData['latitude']
+            : double.tryParse(storeData['latitude'].toString()) ?? 0.0;
+        longitude = storeData['longitude'] is double
+            ? storeData['longitude']
+            : double.tryParse(storeData['longitude'].toString()) ?? 0.0;
       });
+
+      selectedPlan = storeData['selectedPlan'] ?? "";
+      isOfflineStore = selectedPlan.contains('offline');
+      log('isOfflineStore = ${storeData['selectedPlan']}');
       if (!context.mounted) return;
-      dialogGetLatLong(context, storeName, lat: latitude, long: longitude);
+
+      dialogGetLatLong(
+        context,
+        storeName,
+        isOfflineStore,
+        lat: latitude,
+        long: longitude,
+      );
     }
   }
 
@@ -407,7 +457,7 @@ class _FormCallState extends State<FormCall> {
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -434,101 +484,110 @@ class _FormCallState extends State<FormCall> {
                 ),
               ),
               const SizedBox(height: 10),
-              DropdownButtonFormField2<StoreObject>(
-                isExpanded: false,
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-                dropdownSearchData: DropdownSearchData(
-                  searchController: searchStoreController,
-                  searchInnerWidgetHeight: 50,
-                  searchInnerWidget: Container(
-                    height: 50,
-                    padding: const EdgeInsets.only(
-                      top: 8,
-                      bottom: 4,
-                      right: 8,
-                      left: 8,
-                    ),
-                    child: TextFormField(
-                      expands: true,
-                      maxLines: null,
-                      controller: searchStoreController,
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        hintText: 'Cari nama customer',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  searchMatchFn: (item, searchValue) {
-                    return (item.value?.storeName ?? "")
-                        .toLowerCase()
-                        .toString()
-                        .contains(searchValue.toLowerCase());
-                  },
-                ),
-                hint: Text(
-                  "Pilih customer",
-                  style: TextStyle(color: Colors.grey.shade500),
-                ),
-                value: selectedStore,
-                items: listStore
-                    .map(
-                      (e) => DropdownMenuItem<StoreObject>(
-                        value: e,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.7,
-                            child: Text(
-                              e.storeName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+              loadingButtonGetPhotoToko
+                  ? const Center(
+                      child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator()),
+                    )
+                  : DropdownButtonFormField2<StoreObject>(
+                      isExpanded: false,
+                      decoration:
+                          const InputDecoration(border: OutlineInputBorder()),
+                      dropdownSearchData: DropdownSearchData(
+                        searchController: searchStoreController,
+                        searchInnerWidgetHeight: 50,
+                        searchInnerWidget: Container(
+                          height: 50,
+                          padding: const EdgeInsets.only(
+                            top: 8,
+                            bottom: 4,
+                            right: 8,
+                            left: 8,
+                          ),
+                          child: TextFormField(
+                            expands: true,
+                            maxLines: null,
+                            controller: searchStoreController,
+                            decoration: const InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              hintText: 'Cari nama customer',
+                              border: OutlineInputBorder(),
                             ),
                           ),
                         ),
+                        searchMatchFn: (item, searchValue) {
+                          return (item.value?.storeName ?? "")
+                              .toLowerCase()
+                              .toString()
+                              .contains(searchValue.toLowerCase());
+                        },
                       ),
-                    )
-                    .toList(),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Silihkan pilih salah satu toko';
-                  }
-                  return null;
-                },
-                onChanged: (value) async {
-                  setState(() {
-                    selectedStore = value;
-                    fetchStoreDetails(
-                      context,
-                      selectedStore!.storeId,
-                      selectedStore!.storeName,
-                    );
-                  });
-                },
-                buttonStyleData: const ButtonStyleData(
-                  padding: EdgeInsets.only(right: 10),
-                ),
-                iconStyleData: const IconStyleData(
-                  icon: Icon(
-                    Icons.keyboard_arrow_down_outlined,
-                    color: Colors.black45,
-                  ),
-                  iconSize: 16,
-                ),
-                dropdownStyleData: DropdownStyleData(
-                  maxHeight: MediaQuery.of(context).size.height * 0.4,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                menuItemStyleData: const MenuItemStyleData(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
-                ),
-              ),
+                      hint: Text(
+                        "Pilih customer",
+                        style: TextStyle(color: Colors.grey.shade500),
+                      ),
+                      value: listStore.isEmpty ? null : selectedStore,
+                      items: listStore
+                          .map(
+                            (e) => DropdownMenuItem<StoreObject>(
+                              value: e,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.7,
+                                  child: Text(
+                                    e.storeName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Silahkan pilih salah satu toko';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) async {
+                        setState(() {
+                          selectedStore = value;
+                          fetchStoreDetails(
+                            context,
+                            selectedStore!.storeId,
+                            selectedStore!.storeName,
+                          );
+                        });
+                      },
+                      buttonStyleData: const ButtonStyleData(
+                        padding: EdgeInsets.only(right: 10),
+                      ),
+                      iconStyleData: const IconStyleData(
+                        icon: Icon(
+                          Icons.keyboard_arrow_down_outlined,
+                          color: Colors.black45,
+                        ),
+                        iconSize: 16,
+                      ),
+                      dropdownStyleData: DropdownStyleData(
+                        maxHeight: MediaQuery.of(context).size.height * 0.4,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      menuItemStyleData: const MenuItemStyleData(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                    ),
               const SizedBox(height: 20),
               const Text(
                 'Select Type',
@@ -598,9 +657,9 @@ class _FormCallState extends State<FormCall> {
                     ),
                     onPressed: () async {
                       XFile file = await getImageCall();
-                      imagePath = file.path;
-
-                      setState(() {});
+                      setState(() {
+                        imagePath = file.path;
+                      });
                     },
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.start,
