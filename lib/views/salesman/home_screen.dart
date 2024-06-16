@@ -1,9 +1,11 @@
 import 'dart:developer';
+import 'package:auctus_call/views/salesman/inputpjp.dart';
 import 'package:auctus_call/views/salesman/session.dart';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/form_call.dart';
 import 'package:auctus_call/views/salesman/promotion_list.dart';
 import 'package:auctus_call/views/salesman/scraping_form.dart';
+import 'package:auctus_call/views/salesman/sign_up.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -289,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => PromotionList(),
+                                    builder: (context) => SignUpScreen(),
                                   ),
                                 );
                               },
@@ -311,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => PromotionList(),
+                                    builder: (context) => InputPJP(),
                                   ),
                                 );
                               },

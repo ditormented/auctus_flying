@@ -1,6 +1,7 @@
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/salesman/form_inputpromotion.dart';
 import 'package:auctus_call/views/salesman/promotiondetail.dart';
+import 'package:auctus_call/views/salesman/session.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -25,9 +26,19 @@ class _StoreLeagueState extends State<StoreLeague> {
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white),
-            onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => PromotionForm()));
+            onPressed: () async {
+              final SessionManager sessionManager = SessionManager();
+              String? role = await sessionManager.getRole();
+              if (role == 'Administrator' || role == 'Head Of C2C') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => PromotionForm()));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          'Anda tidak memiliki izin untuk menambah promosi')),
+                );
+              }
             },
           )
         ],

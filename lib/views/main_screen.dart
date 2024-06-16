@@ -101,19 +101,20 @@ class _MainScreenState extends State<MainScreen> {
       );
     }
 
-    final List<Widget> pages = _userRole == 'Administrator'
-        ? [
-            HomeScreen(documentID: widget.ID),
-            ProductList(userID: widget.ID),
-            StoreList(userID: widget.ID),
-            ProfileScreen(documentID: widget.ID),
-          ]
-        : [
-            HomeScreenUser(documentID: widget.ID),
-            ProductList(userID: widget.ID),
-            StoreList(userID: widget.ID),
-            ProfileScreen(documentID: widget.ID),
-          ];
+    final List<Widget> pages =
+        _userRole == 'Administrator' || _userRole == 'Head Of C2C'
+            ? [
+                HomeScreen(documentID: widget.ID),
+                ProductList(userID: widget.ID),
+                StoreList(userID: widget.ID),
+                ProfileScreen(documentID: widget.ID),
+              ]
+            : [
+                HomeScreenUser(documentID: widget.ID),
+                ProductList(userID: widget.ID),
+                StoreList(userID: widget.ID),
+                ProfileScreen(documentID: widget.ID),
+              ];
 
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(

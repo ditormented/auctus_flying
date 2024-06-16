@@ -157,6 +157,7 @@ class _MainCatalogState extends State<MainCatalog>
     );
   }
 
+  final List<String> brands = ['Beiersdorf', 'PASEO'];
   final List<List<String>> categories = [
     [
       'Nivea Sun',
@@ -179,7 +180,7 @@ class _MainCatalogState extends State<MainCatalog>
       'Wipes Tissue'
     ],
   ];
-  final List<String> brands = ['Beiersdorf', 'PASEO'];
+  // final List<String> brands = ['Beiersdorf', 'PASEO'];
 
   @override
   Widget build(BuildContext context) {
