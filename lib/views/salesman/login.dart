@@ -1,7 +1,6 @@
 import 'package:auctus_call/r.dart';
 import 'package:auctus_call/utilities/colors.dart';
 import 'package:auctus_call/views/main_screen.dart';
-import 'package:auctus_call/views/salesman/home_screen_user.dart';
 import 'package:auctus_call/views/salesman/session.dart';
 import 'package:auctus_call/views/salesman/sign_up.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -41,14 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
             .doc(userId)
             .get();
         if (userDoc.exists) {
-          String role = userDoc['role'];
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => role == 'Administrator'
-                  ? MainScreen(ID: userId)
-                  : HomeScreenUser(documentID: userId),
-            ),
+            MaterialPageRoute(builder: (context) => MainScreen(ID: userId)),
           );
         }
       }
@@ -217,21 +211,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SignUpScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Sign Up dulu deh',
-                        style: TextStyle(color: Colors.grey, fontSize: 10),
-                      ),
-                    ),
+                    // const SizedBox(height: 10),
+                    // InkWell(
+                    //   onTap: () {
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => SignUpScreen(),
+                    //       ),
+                    //     );
+                    //   },
+                    //   child: const Text(
+                    //     'Sign Up dulu deh',
+                    //     style: TextStyle(color: Colors.grey, fontSize: 10),
+                    //   ),
+                    // ),
                     const SizedBox(height: 32),
                     isLoading
                         ? const Center(child: CircularProgressIndicator())

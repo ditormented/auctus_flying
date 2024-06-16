@@ -283,6 +283,28 @@ class _HomeScreenUserState extends State<HomeScreenUser> {
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PromotionList(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: mainColor,
+                                minimumSize: const Size(double.infinity, 50),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: const Text(
+                                'List PJP',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                             const SizedBox(height: 16),
                             const Text(
                               'Daily Update',
