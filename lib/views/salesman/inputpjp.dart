@@ -25,16 +25,14 @@ class _InputPJPState extends State<InputPJP> {
         _selectedStores.isNotEmpty &&
         _selectedSalesmanId != null) {
       try {
-        for (var store in _selectedStores) {
-          await FirebaseFirestore.instance.collection('pjp').add({
-            'date': _dateController.text,
-            'name': {
-              'salesmanId': _selectedSalesmanId,
-              'salesmanName': _selectedSalesmanName,
-            },
-            'store': store,
-          });
-        }
+        await FirebaseFirestore.instance.collection('pjp').add({
+          'date': _dateController.text,
+          'name': {
+            'salesmanId': _selectedSalesmanId,
+            'salesmanName': _selectedSalesmanName,
+          },
+          'store': _selectedStores,
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Data successfully added')),
