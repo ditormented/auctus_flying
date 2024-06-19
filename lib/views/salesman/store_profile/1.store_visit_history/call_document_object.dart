@@ -1,4 +1,5 @@
 class CallDocumentObject {
+  String documentID;
   String address;
   String callResult;
   String email;
@@ -15,6 +16,7 @@ class CallDocumentObject {
   DateTime dateTime;
   
   CallDocumentObject({
+    required this.documentID,
     required this.address,
     required this.callResult,
     required this.email,

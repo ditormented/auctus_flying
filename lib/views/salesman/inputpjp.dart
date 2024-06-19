@@ -68,6 +68,15 @@ class _InputPJPState extends State<InputPJP> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _dateController.text = DateFormat('yyyy-MM-dd').format(DateTime.now().add(
+      const Duration(days: 1),
+    ));
+  }
+
+  @override
   void dispose() {
     _dateController.dispose();
     super.dispose();

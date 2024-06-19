@@ -33,6 +33,7 @@ class _StoreVisitHistoryState extends State<StoreVisitHistory> {
         itemBuilder: (context, index) {
           return timelineTile(
             context,
+            documentID: listCall[index].documentID,
             time: listCall[index].dateTime,
             title: listCall[index].dateTime,
             description: widget.listCall[index].callResult,
@@ -47,6 +48,7 @@ class _StoreVisitHistoryState extends State<StoreVisitHistory> {
 
   TimelineTile timelineTile(BuildContext context,
       {required DateTime time,
+      required String documentID,
       required DateTime title,
       required String description,
       required String imageUrl,
@@ -107,7 +109,8 @@ class _StoreVisitHistoryState extends State<StoreVisitHistory> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  formattedTime,
+                  documentID,
+                  // formattedTime,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
