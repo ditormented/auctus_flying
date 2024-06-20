@@ -67,7 +67,6 @@ class _HomeScreenUserState extends State<HomeScreenUser> {
           .collection('stores')
           .where('email', isEqualTo: _userEmail)
           .get();
-
       setState(() {
         _storeCount = storeSnapshot.docs.length;
       });
@@ -78,17 +77,20 @@ class _HomeScreenUserState extends State<HomeScreenUser> {
 
   void getCallTotal() async {
     try {
-      DateTime startOfDay = DateTime(_selectedDate.year, _selectedDate.month,
-          _selectedDate.day, 00, 00, 00);
+      DateTime startOfDay = DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day, 0, 0, 0);
       DateTime endOfDay = DateTime(_selectedDate.year, _selectedDate.month,
           _selectedDate.day, 23, 59, 59);
+
+      print('Start of Day: $startOfDay');
+      print('End of Day: $endOfDay');
 
       QuerySnapshot callSnapshot = await FirebaseFirestore.instance
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
-          // .where('timestamp',
-          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -110,9 +112,9 @@ class _HomeScreenUserState extends State<HomeScreenUser> {
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
           .where('callResult', isEqualTo: 'purchase')
-          // .where('timestamp',
-          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -134,9 +136,9 @@ class _HomeScreenUserState extends State<HomeScreenUser> {
           .collection('calls')
           .where('email', isEqualTo: _userEmail)
           .where('callResult', isEqualTo: 'reject')
-          // .where('timestamp',
-          //     isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          // .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       setState(() {
@@ -151,8 +153,8 @@ class _HomeScreenUserState extends State<HomeScreenUser> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      firstDate: DateTime(2024),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {

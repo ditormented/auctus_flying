@@ -62,9 +62,19 @@ class _InputPJPState extends State<InputPJP> {
     );
     if (picked != null) {
       setState(() {
+        
         _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _dateController.text = DateFormat('yyyy-MM-dd').format(DateTime.now().add(
+      const Duration(days: 1),
+    ));
   }
 
   @override

@@ -196,6 +196,7 @@ class _StoreProfileState extends State<StoreProfile> {
         DateTime? visitDate = docTimestamp?.toDate();
         listCall1.add(
           CallDocumentObject(
+            documentID: doc.id,
             address: doc["address"] ?? '',
             callResult: doc["callResult"] ?? '',
             email: doc["email"] ?? '',
@@ -227,20 +228,21 @@ class _StoreProfileState extends State<StoreProfile> {
             try {
               List<Map<String, dynamic>> items =
                   List<Map<String, dynamic>>.from(purchaseDoc["items"]);
+              listPurchase.add(
+                PurchaseDocumentObject(
+                  callID: purchaseDoc["callID"] ?? '',
+                  items: items,
+                  // timestamp: purchaseDoc["timestamp"].isNotEmpty
+                  //     ? (purchaseDoc["timestamp"] as Timestamp).toDate()
+                  //     : DateTime.now(),
+                  timestamp: (purchaseDoc["timestamp"] as Timestamp).toDate(),
+                  total: purchaseDoc["total"] ?? 0.0,
+                  userID: purchaseDoc["userID"] ?? '',
+                  caption: purchaseDoc["caption"],
+                ),
+              );
               setState(() {
-                listPurchase.add(
-                  PurchaseDocumentObject(
-                    callID: purchaseDoc["callID"] ?? '',
-                    items: items,
-                    // timestamp: purchaseDoc["timestamp"].isNotEmpty
-                    //     ? (purchaseDoc["timestamp"] as Timestamp).toDate()
-                    //     : DateTime.now(),
-                    timestamp: (purchaseDoc["timestamp"] as Timestamp).toDate(),
-                    total: purchaseDoc["total"] ?? 0.0,
-                    userID: purchaseDoc["userID"] ?? '',
-                    caption: purchaseDoc["caption"],
-                  ),
-                );
+                listPurchase.sort((a, b) => a.timestamp.compareTo(b.timestamp));
               });
             } catch (e) {
               log("listPurchase.add error => $e");
@@ -252,6 +254,7 @@ class _StoreProfileState extends State<StoreProfile> {
           log("Error getting purchase document with ID ${doc.id} => $e");
         }
       }
+      listCall1.sort((a, b) => a.dateTime.compareTo(b.dateTime));
       setState(() {
         listCall = listCall1;
       });
@@ -415,7 +418,7 @@ class _StoreProfileState extends State<StoreProfile> {
                   ),
                 ),
               ),
-              // validasi lokasi => start
+              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(
@@ -597,7 +600,6 @@ class _StoreProfileState extends State<StoreProfile> {
           } else if (selectHistory == EnumSelectHistory.orderHistory) {}
         },
         child: Container(
-          height: 70,
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -606,10 +608,10 @@ class _StoreProfileState extends State<StoreProfile> {
           ),
           child: Text(
             selectHistory.name == EnumSelectHistory.visitHistory.name
-                ? 'Visit   History'
+                ? 'Visit\nHistory'
                 : selectHistory.name == EnumSelectHistory.orderHistory.name
-                    ? 'Order History'
-                    : 'Store League',
+                    ? 'Order\nHistory'
+                    : 'Store\nLeague',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.black,
