@@ -418,7 +418,7 @@ class _StoreProfileState extends State<StoreProfile> {
                   ),
                 ),
               ),
-              // validasi lokasi => start
+              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(

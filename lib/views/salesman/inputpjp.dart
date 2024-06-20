@@ -62,6 +62,7 @@ class _InputPJPState extends State<InputPJP> {
     );
     if (picked != null) {
       setState(() {
+        
         _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
       });
     }

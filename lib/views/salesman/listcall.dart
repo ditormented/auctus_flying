@@ -1,5 +1,4 @@
 import 'package:auctus_call/utilities/colors.dart';
-import 'package:auctus_call/views/salesman/store_profile/1.store_visit_history/store_visit_history.dart';
 import 'package:auctus_call/views/salesman/store_profile/store_object.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
