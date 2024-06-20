@@ -18,7 +18,9 @@ class _InputPJPState extends State<InputPJP> {
   String? _selectedSalesmanId;
   String? _selectedSalesmanName;
   String? _selectedKabupaten;
+  String _selectedSalesmanEmail = '';
   List<Map<String, dynamic>> _selectedStores = [];
+  Map<String, Timestamp> storeVisitDates = {};
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate() &&
@@ -66,6 +68,32 @@ class _InputPJPState extends State<InputPJP> {
         _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
+  }
+
+  Future<void> _fetchLastVisitDates() async {
+    final calls = await FirebaseFirestore.instance.collection('calls').get();
+    final Map<String, Timestamp> visits = {};
+    for (var call in calls.docs) {
+      final data = call.data();
+      final storeId = data['storeId'];
+      final timestamp = data['timestamp'];
+      if (storeId != null && timestamp != null) {
+        final existingTimestamp = visits[storeId];
+        if (existingTimestamp == null ||
+            existingTimestamp.compareTo(timestamp) < 0) {
+          visits[storeId] = timestamp;
+        }
+      }
+    }
+    setState(() {
+      storeVisitDates = visits;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLastVisitDates();
   }
 
   @override
@@ -140,9 +168,11 @@ class _InputPJPState extends State<InputPJP> {
                     onChanged: (value) {
                       setState(() {
                         _selectedSalesmanId = value;
+
                         var selectedSalesman = salesmanDocuments
                             .firstWhere((doc) => doc.id == value);
                         _selectedSalesmanName = selectedSalesman['name'];
+                        _selectedSalesmanEmail = selectedSalesman['email'];
                       });
                     },
                     decoration: const InputDecoration(
@@ -209,6 +239,7 @@ class _InputPJPState extends State<InputPJP> {
                   stream: FirebaseFirestore.instance
                       .collection('stores')
                       .where('selectedKabupaten', isEqualTo: _selectedKabupaten)
+                      .where('email', isEqualTo: _selectedSalesmanEmail)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
@@ -217,12 +248,27 @@ class _InputPJPState extends State<InputPJP> {
 
                     var storeDocuments = snapshot.data!.docs;
 
+                    // Sort stores based on last visit date
+                    storeDocuments.sort((a, b) {
+                      final aDate = storeVisitDates[a.id] ??
+                          Timestamp.fromMillisecondsSinceEpoch(0);
+                      final bDate = storeVisitDates[b.id] ??
+                          Timestamp.fromMillisecondsSinceEpoch(0);
+                      return aDate.compareTo(bDate);
+                    });
+
                     return DropdownButtonFormField<String>(
                       value: _selectedStoreId,
                       items: storeDocuments.map((doc) {
+                        final lastVisitDate = storeVisitDates[doc.id];
                         return DropdownMenuItem<String>(
                           value: doc.id,
-                          child: Text(doc['storeName']),
+                          child: Text(
+                            doc['storeName'] +
+                                (lastVisitDate != null
+                                    ? ' (Last visited: ${DateFormat('yyyy-MM-dd').format(lastVisitDate.toDate())})'
+                                    : ' (No visit data)'),
+                          ),
                         );
                       }).toList(),
                       onChanged: (value) {
